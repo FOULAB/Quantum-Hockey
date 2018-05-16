@@ -8,7 +8,7 @@ local ballProbs = {}
 local count = 1
 local ballSize = 20
 local playerSize = 30
-local loop = true
+local loop = true --try replacing this with returns in the love.update() function
 local lowestProb = 2
 
 local newBall = false
@@ -91,13 +91,15 @@ function love.update()
 	p1.vx = p1.x - p1.prevX
 	p1.vy = p1.y - p1.prevY
 
+	--OPTIMIZATION: modify this to change only when the total probability changes (goal, ball degrades)
 	totalProb = 0
 	for i = 1, #ballProbs do
 		totalProb = totalProb + ballProbs[i].prob
 	end
 
 	if totalProb < 40 then
-		
+
+		--Move this into its own function
 		newBall = true
 		ballIntro = ballIntro - (winWidth/1.5)/ ballIntro
 
