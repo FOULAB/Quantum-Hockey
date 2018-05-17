@@ -8,7 +8,7 @@ local ballProbs = {}
 local count = 1
 local ballSize = 20
 local playerSize = 30
-local loop = true --try replacing this with returns in the love.update() function
+local loop = true --tried replacing this with returns in the love.update() function, but it had weird results
 local lowestProb = 2
 
 local newBall = false
@@ -65,7 +65,12 @@ function split(i)
 		ballProbs[count].x = ballProbs[i].x
 		ballProbs[count].y = ballProbs[i].y
 	end
+end
 
+function removeBall(i)
+	table.remove(ballProbs, i)
+	count = #ballProbs
+	loop = false
 end
 
 function love.load()
@@ -91,7 +96,7 @@ function love.update()
 	p1.vx = p1.x - p1.prevX
 	p1.vy = p1.y - p1.prevY
 
-	--OPTIMIZATION: modify this to change only when the total probability changes (goal, ball degrades)
+	--OPTIMIZATION: maybe modify this to change only when the total probability changes (ball removed, new ball)
 	totalProb = 0
 	for i = 1, #ballProbs do
 		totalProb = totalProb + ballProbs[i].prob
@@ -111,21 +116,25 @@ function love.update()
 		end
 	end
 	for i=#ballProbs,1,-1 do
+		--Move balls before calculating next event
 		ballProbs[i].x = ballProbs[i].x + ballProbs[i].vx
 		ballProbs[i].y = ballProbs[i].y + ballProbs[i].vy
-
 
 		--Deceleration (friction)
 		ballProbs[i].vx = ballProbs[i].vx * 0.985
 		ballProbs[i].vy = ballProbs[i].vy * 0.985
 
+		--(Optimization)
+		local ballX = ballProbs[i].x
+		local ballY = ballProbs[i].y
+		local ballVx = ballProbs[i].vx
+		local ballVy = ballProbs[i].vy
+
 		--Degradation
-		if ballProbs[i].prob < lowestProb and math.abs(ballProbs[i].vx) <= 0.05 and math.abs(ballProbs[i].vy) <= 0.05 then
+		if ballProbs[i].prob < lowestProb and math.abs(ballVx) <= 0.05 and math.abs(ballVy) <= 0.05 then
 			ballProbs[i].life = ballProbs[i].life -1
 			if ballProbs[i].life <= 0 then
-				table.remove(ballProbs, i)
-				count = #ballProbs
-				loop = false
+				removeBall(i)
 			end
 		end
 
@@ -134,52 +143,50 @@ function love.update()
 
 			ballProbs[i].life = maxLife;
 
-			local vxTotal = ballProbs[i].vx - p1.vx
-	        local vyTotal = ballProbs[i].vy - p1.vy
+			local vxTotal = ballVx - p1.vx
+	        local vyTotal = ballVy - p1.vy
 
-	        local newVelX = (ballProbs[i].vx * (ballProbs[i].mass - p1.mass) + (2 * p1.mass * p1.vx)) / (ballProbs[i].mass + p1.mass)
-	        local newVelY = (ballProbs[i].vy * (ballProbs[i].mass - p1.mass) + (2 * p1.mass * p1.vy)) / (ballProbs[i].mass + p1.mass)
+	        local newVelX = (ballVx * (ballProbs[i].mass - p1.mass) + (2 * p1.mass * p1.vx)) / (ballProbs[i].mass + p1.mass)
+	        local newVelY = (ballVy * (ballProbs[i].mass - p1.mass) + (2 * p1.mass * p1.vy)) / (ballProbs[i].mass + p1.mass)
       
 	         --fix for immobile player
-			if p1.vx == 0 then newVelX = (ballProbs[i].vx * (ballProbs[i].mass - 100) + (2 * 100 * p1.vx)) / (ballProbs[i].mass + 100) end
-			if p1.vy == 0 then newVelY = (ballProbs[i].vy * (ballProbs[i].mass - 100) + (2 * 100 * p1.vy)) / (ballProbs[i].mass + 100) end
+			if p1.vx == 0 then newVelX = (ballVx * (ballProbs[i].mass - 100) + (2 * 100 * p1.vx)) / (ballProbs[i].mass + 100) end
+			if p1.vy == 0 then newVelY = (ballVy * (ballProbs[i].mass - 100) + (2 * 100 * p1.vy)) / (ballProbs[i].mass + 100) end
 
 	        -- Move the circles so that they don't overlap
-	        local collPointX = ((ballProbs[i].x * playerSize) + (p1.x * ballSize))/(ballSize + playerSize)
-			local collPointY = ((ballProbs[i].y * playerSize) + (p1.y * ballSize))/(ballSize + playerSize)
-	        local dist = math.sqrt((ballProbs[i].x - p1.x)^2 + (ballProbs[i].y - p1.y)^2)
-	        ballProbs[i].x = collPointX + (ballSize * (ballProbs[i].x - p1.x)/dist)*1.1
-	        ballProbs[i].y = collPointY + (ballSize * (ballProbs[i].y - p1.y)/dist)*1.1
+	        local collPointX = ((ballX * playerSize) + (p1.x * ballSize))/(ballSize + playerSize)
+			local collPointY = ((ballY * playerSize) + (p1.y * ballSize))/(ballSize + playerSize)
+	        local dist = math.sqrt((ballX - p1.x)^2 + (ballY - p1.y)^2)
+	        ballProbs[i].x = collPointX + (ballSize * (ballX - p1.x)/dist)*1.1
+	        ballProbs[i].y = collPointY + (ballSize * (ballY - p1.y)/dist)*1.1
 	         
 	        -- Update the velocities
 	        ballProbs[i].vx = newVelX
 	        ballProbs[i].vy = newVelY
-			split(i)		
+			split(i)
 		end
+
 		--Wall interaction
 		--Wall X
-		if loop and math.abs(ballProbs[i].x) >= (winWidth / 2 - ballSize) then 
-			if ballProbs[i].x > (winWidth / 2 - ballSize) then ballProbs[i].x = (winWidth / 2 - ballSize - 1) end
-			if ballProbs[i].x < (-winWidth / 2 + ballSize) then ballProbs[i].x = (-winWidth / 2 + ballSize + 1) end
+		if loop and math.abs(ballX) >= (winWidth / 2 - ballSize) then 
+			if ballX > 0 then ballProbs[i].x = (winWidth / 2 - ballSize - 1) end
+			if ballX < 0 then ballProbs[i].x = (-winWidth / 2 + ballSize + 1) end
 			reflectX(i)
 		end
 		--Wall Y
-		if loop and math.abs(ballProbs[i].y) >= (winHeight / 2 - ballSize - 15) and math.abs(ballProbs[i].x) > (winWidth / 6) then
-			if ballProbs[i].y > (winHeight / 2 - ballSize - 15) then ballProbs[i].y = (winHeight / 2 - ballSize - 16) end
-			if ballProbs[i].y < (-winHeight / 2 + ballSize + 15) then ballProbs[i].y = (-winHeight / 2 + ballSize + 16) end
+		if loop and math.abs(ballY) >= (winHeight / 2 - ballSize - 15) and math.abs(ballProbs[i].x) > (winWidth / 6) then
+			if ballY > 0 then ballProbs[i].y = (winHeight / 2 - ballSize - 16) end
+			if ballY < 0 then ballProbs[i].y = (-winHeight / 2 + ballSize + 16) end
 			reflectY(i)
 		end
-		if loop and ballProbs[i].y >= (winHeight / 2) and math.abs(ballProbs[i].x) <= (winWidth / 6) then
+		--SCORE!
+		if loop and ballY >= (winHeight / 2) and math.abs(ballX) <= (winWidth / 6) then
 			scoreBottom = scoreBottom + ballProbs[i].prob / 100
-			table.remove(ballProbs, i)
-			count = #ballProbs
-			loop = false
+			removeBall(i)
 		end
-		if loop and ballProbs[i].y <= (-winHeight / 2) and math.abs(ballProbs[i].x) <= (winWidth / 6) then
+		if loop and ballY <= (-winHeight / 2) and math.abs(ballX) <= (winWidth / 6) then
 			scoreTop = scoreTop + ballProbs[i].prob / 100
-			table.remove(ballProbs, i)
-			count = #ballProbs
-			loop = false
+			removeBall(i)
 		end
 		loop = true
 	end
