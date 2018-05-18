@@ -75,6 +75,8 @@ end
 
 function love.load()
     love.window.setMode(winWidth, winHeight, {resizable=false, vsync=true, msaa = 4})
+    love.mouse.setVisible(false)
+
     ballProbs = {}
     scoreTop = 0
     scoreBottom = 0
