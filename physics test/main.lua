@@ -75,7 +75,7 @@ function removeBall(i)
 end
 
 function love.load()
-    love.window.setMode(winWidth, winHeight, {resizable=false, vsync=true, msaa = 4})
+    love.window.setMode(winWidth, winHeight, {resizable=false, vsync=false, msaa = 4})
     ballProbs = {}
     scoreTop = 0
     scoreBottom = 0
@@ -100,10 +100,12 @@ function love.load()
 
 end
 	
-function love.update()
+function love.update(dt)
 	if love.keyboard.isDown('r') then love.load() end
 
-	
+	--get mouse position
+	handle.joint:setTarget(love.mouse.getPosition())
+	world:update(dt)
 
 
 	--OPTIMIZATION: maybe modify this to change only when the total probability changes (ball removed, new ball)
@@ -179,7 +181,7 @@ end
 function love.draw()
 	love.graphics.clear(1, 1, 1)
 	love.graphics.setColor(0, 0, 0, 0.4)
-	love.graphics.translate(winWidth/2, winHeight/2)
+	-- love.graphics.translate(winWidth/2, winHeight/2)
 	love.graphics.rectangle("fill", -winWidth/2, -winHeight/2, winWidth/3, 15)
 	love.graphics.rectangle("fill", winWidth/2 - winWidth/3, -winHeight/2, winWidth/3, 15)
 	love.graphics.rectangle("fill", -winWidth/2, winHeight/2 -15, winWidth/3, 15)
@@ -196,6 +198,8 @@ function love.draw()
 
 	love.graphics.setColor(0.3, 0.3, 0.3)
 	love.graphics.circle("fill", handle.body:getX(), handle.body:getY(), playerSize)
+	love.graphics.setColor(0.5,0.14, 1)
+	love.graphics.circle("fill", ball.body:getX(), ball.body:getY(), ballSize)
 
 	for i = #ballProbs, 1, -1  do
 		love.graphics.setColor(1,0.14,0.34,  1 - (100 - ballProbs[i].prob)/102)
