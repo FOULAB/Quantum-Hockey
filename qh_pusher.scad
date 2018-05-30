@@ -6,7 +6,7 @@ handleHeight = 95;
 baseRadius = 95 /2;
 wallThickness = 2.5;
 ledRadius = 5.1 / 2;
-handleTaper = 3.5;
+handleTaper = 4;
 
 
 difference(){
