@@ -1,5 +1,9 @@
-local winWidth = 600
-local winHeight = 800
+local windowed = false
+
+local winWidth = 1024
+local winHeight = 768
+local playHeight = 524.5
+local goalSize = playHeight * 0.286
 
 local speed = 1
 local maxLife = 300
@@ -7,12 +11,12 @@ local ball = {x = 0, y = 0, vx = speed, vy = speed, mass=1, prob = 100, life = m
 local ballProbs = {}
 local count = 1
 local ballSize = 20
-local playerSize = 30
+local playerSize = 34
 local loop = true --tried replacing this with returns in the love.update() function, but it had weird results
 local lowestProb = 2
 
 local newBall = false
-local ballIntro = winWidth/4
+local ballIntro = playHeight/4
 
 function variance()
 	return love.math.random(-10, 10) / 80
@@ -74,8 +78,20 @@ function removeBall(i)
 end
 
 function love.load()
-    love.window.setMode(winWidth, winHeight, {resizable=false, vsync=true, msaa = 4})
+    love.window.setMode(winWidth, winHeight, {resizable=false, vsync=true})
     love.mouse.setVisible(false)
+
+    if not windowed then
+    	local fullscreen = love.window.setFullscreen(true)
+	end
+	
+	winWidth, winHeight = love.graphics.getDimensions()
+	playHeight = winWidth * 0.512 --ratio based on real dimensions
+	goalSize = playHeight * 0.286 /2
+	ballIntro = playHeight/4
+	ballSize = winWidth * 0.038 /2
+	playerSize = winWidth * 0.066 /2
+
 
     ballProbs = {}
     scoreTop = 0
@@ -89,12 +105,18 @@ end
 	
 function love.update()
 	if love.keyboard.isDown('r') then love.load() end
+	if love.keyboard.isDown('escape') then
+		windowed = true
+		winWidth = 1024
+		winHeight = 768
+		love.load()
+	end
 
 	--Get player position and velocity
 	p1.prevX = p1.x
 	p1.prevY = p1.y
 	p1.x = love.mouse.getX() - winWidth/2
-	p1.y = love.mouse.getY() - winHeight/2
+	p1.y = love.mouse.getY() - playHeight/2
 	p1.vx = p1.x - p1.prevX
 	p1.vy = p1.y - p1.prevY
 
@@ -108,16 +130,19 @@ function love.update()
 
 		--Move this into its own function
 		newBall = true
-		ballIntro = ballIntro - (winWidth/1.5)/ ballIntro
+		ballIntro = ballIntro - (playHeight/1.5)/ ballIntro
 
 		if ballIntro <= ballSize then
 			count = count + 1
 			ballProbs[count] = ball:new{vx = speed * (round(love.math.random(0,1)) * 2 -1), vy = speed * (round(love.math.random(0,1)) * 2 -1)}
 			newBall = false
-			ballIntro = winWidth/4
+			ballIntro = playHeight/4
 		end
 	end
 	for i=#ballProbs,1,-1 do
+
+		--OPTIMIZATION TO ADD! local ball = ballProbs[i]
+
 		--Move balls before calculating next event
 		ballProbs[i].x = ballProbs[i].x + ballProbs[i].vx
 		ballProbs[i].y = ballProbs[i].y + ballProbs[i].vy
@@ -170,23 +195,23 @@ function love.update()
 
 		--Wall interaction
 		--Wall X
-		if loop and math.abs(ballX) >= (winWidth / 2 - ballSize) then 
+		if loop and math.abs(ballX) >= (winWidth / 2 - ballSize) and math.abs(ballY) > (goalSize) then 
 			if ballX > 0 then ballProbs[i].x = (winWidth / 2 - ballSize - 1) end
 			if ballX < 0 then ballProbs[i].x = (-winWidth / 2 + ballSize + 1) end
 			reflectX(i)
 		end
 		--Wall Y
-		if loop and math.abs(ballY) >= (winHeight / 2 - ballSize - 15) and math.abs(ballProbs[i].x) > (winWidth / 6) then
-			if ballY > 0 then ballProbs[i].y = (winHeight / 2 - ballSize - 16) end
-			if ballY < 0 then ballProbs[i].y = (-winHeight / 2 + ballSize + 16) end
+		if loop and math.abs(ballY) >= (playHeight / 2 - ballSize) then
+			if ballY > 0 then ballProbs[i].y = (playHeight / 2 - ballSize - 16) end
+			if ballY < 0 then ballProbs[i].y = (-playHeight / 2 + ballSize + 16) end
 			reflectY(i)
 		end
 		--SCORE!
-		if loop and ballY >= (winHeight / 2) and math.abs(ballX) <= (winWidth / 6) then
+		if loop and ballX >= (winWidth / 2) and math.abs(ballY) <= (goalSize) then
 			scoreBottom = scoreBottom + ballProbs[i].prob / 100
 			removeBall(i)
 		end
-		if loop and ballY <= (-winHeight / 2) and math.abs(ballX) <= (winWidth / 6) then
+		if loop and ballX <= (-winWidth / 2) and math.abs(ballY) <= (goalSize) then
 			scoreTop = scoreTop + ballProbs[i].prob / 100
 			removeBall(i)
 		end
@@ -195,20 +220,18 @@ function love.update()
 end
 
 function love.draw()
-	love.graphics.clear(1, 1, 1)
-	love.graphics.setColor(0, 0, 0, 0.4)
 	love.graphics.translate(winWidth/2, winHeight/2)
-	love.graphics.rectangle("fill", -winWidth/2, -winHeight/2, winWidth/3, 15)
-	love.graphics.rectangle("fill", winWidth/2 - winWidth/3, -winHeight/2, winWidth/3, 15)
-	love.graphics.rectangle("fill", -winWidth/2, winHeight/2 -15, winWidth/3, 15)
-	love.graphics.rectangle("fill", winWidth/2 - winWidth/3, winHeight/2 -15, winWidth/3, 15)
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.rectangle("fill", -winWidth/2, -playHeight/2, winWidth, playHeight)
 	love.graphics.setColor(1,0.14,0.34, 0.2)
-	love.graphics.circle("line", 0, 0, winWidth/4)
+	love.graphics.circle("line", 0, 0, playHeight/4)
+	love.graphics.circle("line", winWidth/2, 0, goalSize)
+	love.graphics.circle("line", -winWidth/2, 0, goalSize)
 	love.graphics.setColor(0, 0.2, 0.8, 0.2)
-	love.graphics.line(-winWidth/2, 0, winWidth/2, 0)
+	love.graphics.line(0, -playHeight/2, 0, playHeight/2)
 
 	if newBall then
-		love.graphics.setColor(1,0.14,0.34, (winWidth/4)/ballIntro - 1)
+		love.graphics.setColor(1,0.14,0.34, (playHeight/4)/ballIntro - 1)
 		love.graphics.circle("fill", 0, 0, ballIntro)
 	end
 
@@ -221,6 +244,7 @@ function love.draw()
 		love.graphics.circle("fill", ballProbs[i].x, ballProbs[i].y, ballSize)
 	end
 	love.graphics.setColor(0, 0.2, 0.8, .2)
-	love.graphics.printf(scoreTop, -winWidth/4, -winHeight/2 + 20, winWidth/2, "center")
-	love.graphics.printf(scoreBottom, -winWidth/4, winHeight/2 - 40, winWidth/2, "center")
+	love.graphics.printf(scoreTop, -winWidth/4, -playHeight/2 + 20, winWidth/2, "center")
+	love.graphics.printf(scoreBottom, -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
+	love.graphics.printf(totalProb, -winWidth/4, 0, winWidth/2, "center")
 end
