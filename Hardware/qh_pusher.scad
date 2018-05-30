@@ -1,12 +1,12 @@
 //Quantum Hockey pusher
 //by Anghelos
 
-handleRadius = 35 / 2;
+handleRadius = 40 / 2;
 handleHeight = 95;
 baseRadius = 95 /2;
 wallThickness = 2.5;
 ledRadius = 5.1 / 2;
-handleTaper = 4;
+handleTaper = 7;
 
 
 difference(){
