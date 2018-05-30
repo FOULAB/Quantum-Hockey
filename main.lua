@@ -153,10 +153,10 @@ function love.update()
 	p2.prevY = p2.y
 	
 	if joysticks then
-	p1.x = joy1:getGamepadAxis("leftx")*winWidth/2 - winWidth/2
-	p1.y = joy1:getGamepadAxis("lefty")*playHeight - playHeight/2
-	p2.x = joy1:getGamepadAxis("rightx")*winWidth/2
-	p2.y = joy1:getGamepadAxis("righty")*playHeight - playHeight/2
+	p1.x = (joy1:getGamepadAxis("leftx")-0.5)*(winWidth/4 - playerSize) - winWidth/8 - playerSize/2
+	p1.y = (joy1:getGamepadAxis("lefty")-0.5)*(playHeight/2 - playerSize) + playHeight/4 - playerSize/2
+	p2.x = (joy1:getGamepadAxis("rightx")-0.5)*(winWidth/4 - playerSize) + 3*winWidth/8 - playerSize/2
+	p2.y = (joy1:getGamepadAxis("righty")-0.5)*(playHeight/2 -playerSize) + playHeight/4 - playerSize/2
 	else
 	p1.x = love.mouse.getX() - winWidth/2
 	p1.y = love.mouse.getY() - playHeight/2
