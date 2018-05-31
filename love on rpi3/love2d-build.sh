@@ -43,9 +43,9 @@ BUILD_ALL=1
 DO_UPDATE=0
 DO_BUILD=0
 
-SDL_VERSION=SDL2-2.0.7
+SDL_VERSION=SDL2-2.0.8
 OPENAL_VERSION=openal-soft-1.18.2
-LOVE_VERSION=love-0.10.2
+LOVE_VERSION=love-11.1
 
 usage() {
   echo "Usage: $0 [ update | build ] [--sdl-only] [--openal-only] [--love-only]"
