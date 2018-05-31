@@ -29,7 +29,8 @@ difference(){
             translate([0,0,-5]) cylinder(h=handleHeight-handleRadius - innerHeight + 5, r = handleRadius);
             }
         translate([0,0, handleHeight - handleRadius]) cylinder(h = 3* wallThickness, r = handleRadius - wallThickness, center = true);
-        
+            //battery
+            translate([0,0, ]);
     }
 }
 
@@ -51,3 +52,5 @@ union(){
     }
     
 }
+
+translate([0, 100, 0]) cube([26.5, 17.5, 48.5]);
