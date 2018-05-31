@@ -6,7 +6,6 @@ $ sh love2d-build.sh build
 
 then
 
-$ tar xvzf love2d-install.tgz
 $ cd love2d-install
 $ sh install.sh
 $ cd ..
