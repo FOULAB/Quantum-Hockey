@@ -1,0 +1,23 @@
+$ sh love2d-build.sh update
+
+then
+
+$ sh love2d-build.sh build
+
+then
+
+$ tar xvzf love2d-install.tgz
+$ cd love2d-install
+$ sh install.sh
+$ cd ..
+
+
+finally, add love command:
+
+add this line
+alias love=/usr/local/games/love/run_love.sh
+in:
+$ nano ~/.bash_profile
+
+Complete instructions at: http://d-alchemy.xyz/software/love/love01.html
+translated: https://translate.google.com/translate?sl=auto&tl=en&js=y&prev=_t&hl=en&ie=UTF-8&u=http%3A%2F%2Fd-alchemy.xyz%2Fsoftware%2Flove%2Flove01.html&edit-text=
