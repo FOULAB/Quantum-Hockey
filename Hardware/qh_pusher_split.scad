@@ -2,11 +2,11 @@
 //by Anghelos
 
 handleRadius = 40 / 2;
-handleHeight = 95;
+handleHeight = 115;
 baseRadius = 95 /2;
 wallThickness = 2.5;
 ledRadius = 5.1 / 2;
-handleTaper = 7;
+handleTaper = 5;
 clearance = 0.4; //Tailor's fault
 innerHeight = 15;
 
@@ -30,7 +30,7 @@ difference(){
             }
         translate([0,0, handleHeight - handleRadius]) cylinder(h = 3* wallThickness, r = handleRadius - wallThickness, center = true);
             //battery
-            translate([0,0, ]);
+            translate([-13.25,-8.75, handleHeight - handleRadius - innerHeight-48.5]) cube([26.5 + clearance, 17.5 + clearance, 48.5 + clearance]);;
     }
 }
 
@@ -52,5 +52,3 @@ union(){
     }
     
 }
-
-translate([0, 100, 0]) cube([26.5, 17.5, 48.5]);
