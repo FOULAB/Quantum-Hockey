@@ -110,7 +110,7 @@ function removeBall(i)
 end
 
 function love.load()
-    love.window.setMode(winWidth, winHeight, {resizable=false, vsync=true})
+    love.window.setMode(winWidth, winHeight, {resizable=false, vsync=true, msaa=4})
     if not windowed then
     	local fullscreen = love.window.setFullscreen(true)
     	love.mouse.setVisible(false)
