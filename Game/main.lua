@@ -1,13 +1,15 @@
 local windowed = false
+local paused = false
 
 local winWidth = 1024
 local winHeight = 768
 local playHeight = 524.5
 local goalSize = playHeight * 0.286
+local friction = 0.985
 
 local speed = 1
-local maxLife = 300
-local ball = {x = 0, y = 0, vx = speed, vy = speed, mass=1, prob = 100, life = maxLife}
+local maxLife = 4 --(seconds after immobility)
+local ballObject = {x = 0, y = 0, vx = speed, vy = speed, mass=1, prob = 100, life = maxLife}
 local ballProbs = {}
 local count = 1
 local ballSize = 20
@@ -27,8 +29,8 @@ function variance()
 	return love.math.random(-10, 10) / 80
 end
 
-local scoreTop = 0
-local scoreBottom = 0
+local scoreLeft = 0
+local scoreRight = 0
 local totalProb = 100
 local p1={x =0, y=0, prevX=0, prevY=0, vx=0, vy=0, mass = 1.1}
 local p2={x =0, y=0, prevX=0, prevY=0, vx=0, vy=0, mass = 1.1}
@@ -38,7 +40,7 @@ function round(n, mult)
     return math.floor((n + mult/2)/mult) * mult
 end
 
-function ball:new (o)
+function ballObject:new (o)
   o = o or {}   -- create object if user does not provide one
   setmetatable(o, self)
   self.__index = self
@@ -51,28 +53,28 @@ function checkCollision(ball, player)
 end
 
 function collide(i, ball, player)
-	ballProbs[i].life = maxLife;
+	ball.life = maxLife;
 
 	local vxTotal = ball.vx - player.vx
     local vyTotal = ball.vy - player.vy
 
-    local newVelX = (ball.vx * (ballProbs[i].mass - player.mass) + (2 * player.mass * player.vx)) / (ballProbs[i].mass + player.mass)
-    local newVelY = (ball.vy * (ballProbs[i].mass - player.mass) + (2 * player.mass * player.vy)) / (ballProbs[i].mass + player.mass)
+    local newVelX = (ball.vx * (ball.mass - player.mass) + (2 * player.mass * player.vx)) / (ball.mass + player.mass)
+    local newVelY = (ball.vy * (ball.mass - player.mass) + (2 * player.mass * player.vy)) / (ball.mass + player.mass)
 
      --fix for immobile player
-	if player.vx == 0 then newVelX = (ball.vx * (ballProbs[i].mass - 100) + (2 * 100 * player.vx)) / (ballProbs[i].mass + 100) end
-	if player.vy == 0 then newVelY = (ball.vy * (ballProbs[i].mass - 100) + (2 * 100 * player.vy)) / (ballProbs[i].mass + 100) end
+	if player.vx == 0 then newVelX = (ball.vx * (ball.mass - 100) + (2 * 100 * player.vx)) / (ball.mass + 100) end
+	if player.vy == 0 then newVelY = (ball.vy * (ball.mass - 100) + (2 * 100 * player.vy)) / (ball.mass + 100) end
 
     -- Move the circles so that they don't overlap
     local collPointX = ((ball.x * playerSize) + (player.x * ballSize))/(ballSize + playerSize)
 	local collPointY = ((ball.y * playerSize) + (player.y * ballSize))/(ballSize + playerSize)
     local dist = math.sqrt((ball.x - player.x)^2 + (ball.y - player.y)^2)
-    ballProbs[i].x = collPointX + (ballSize * (ball.x - player.x)/dist)*1.1
-    ballProbs[i].y = collPointY + (ballSize * (ball.y - player.y)/dist)*1.1
+    ball.x = collPointX + (ballSize * (ball.x - player.x)/dist)*1.1
+    ball.y = collPointY + (ballSize * (ball.y - player.y)/dist)*1.1
      
     -- Update the velocities
-    ballProbs[i].vx = newVelX
-    ballProbs[i].vy = newVelY
+    ball.vx = newVelX
+    ball.vy = newVelY
 	split(i)
 end
 
@@ -91,15 +93,11 @@ function reflectY(i)
 end
 	
 function split(i)
-	if ballProbs[i].prob > lowestProb then
-		ballProbs[i].prob = ballProbs[i].prob / 2
+	local ball = ballProbs[i]
+	if ball.prob > lowestProb then
+		ball.prob = ball.prob / 2
 		count = count +1
-		ballProbs[count] = ball:new{prob = ballProbs[i].prob}
-		ballProbs[count].vx = ballProbs[i].vx + variance()
-		ballProbs[count].vy = ballProbs[i].vy + variance()
-		
-		ballProbs[count].x = ballProbs[i].x
-		ballProbs[count].y = ballProbs[i].y
+		ballProbs[count] = ballObject:new{x= ball.x, y = ball.y, vx = ball.vx + variance(), vy = ball.vy + variance(), prob = ball.prob}
 	end
 end
 
@@ -125,9 +123,9 @@ function love.load()
 
 
     ballProbs = {}
-    scoreTop = 0
-    scoreBottom = 0
-    ballProbs[1] = ball:new{}
+    scoreLeft = 0
+    scoreRight = 0
+    ballProbs[1] = ballObject:new{}
     totalProb = 100
     count = 1
     font = love.graphics.setNewFont(18)
@@ -137,14 +135,21 @@ function love.load()
     if joysticks and next(joysticks) == nil then joysticks = false end
 end
 	
-function love.update()
-	if love.keyboard.isDown('r') then love.load() end
-	if love.keyboard.isDown('escape') then
-		windowed = true
-		winWidth = 1024
-		winHeight = 768
-		love.load()
+function love.update(dt)
+	function love.keypressed(key, unicode)
+		if key == 'escape' then
+			windowed = true
+			winWidth = 1024
+			winHeight = 768
+			love.load()
+		end
+
+		if key == 'p' then
+			paused = not paused
+		end
 	end
+
+	if paused == true then return end
 
 	--Get player position and velocity
 	p1.prevX = p1.x
@@ -180,63 +185,61 @@ function love.update()
 
 		if ballIntro <= ballSize then
 			count = count + 1
-			ballProbs[count] = ball:new{vx = speed * (round(love.math.random(0,1)) * 2 -1), vy = speed * (round(love.math.random(0,1)) * 2 -1)}
+			ballProbs[count] = ballObject:new{vx = speed * (round(love.math.random(0,1)) * 2 -1), vy = speed * (round(love.math.random(0,1)) * 2 -1)}
 			newBall = false
 			ballIntro = playHeight/4
 		end
 	end
 	for i=#ballProbs,1,-1 do
 
-		--OPTIMIZATION TO ADD! local ball = ballProbs[i]
-
-		--Move balls before calculating next event
-		ballProbs[i].x = ballProbs[i].x + ballProbs[i].vx
-		ballProbs[i].y = ballProbs[i].y + ballProbs[i].vy
-
-		--Deceleration (friction)
-		ballProbs[i].vx = ballProbs[i].vx * 0.985
-		ballProbs[i].vy = ballProbs[i].vy * 0.985
-
 		--(Optimization)
 		local ball = ballProbs[i]
 
+		--Move balls before calculating next event
+		ball.x = ball.x + ball.vx
+		ball.y = ball.y + ball.vy
+
+		--Deceleration (friction)
+		ball.vx = ball.vx - ball.vx * friction * dt
+		ball.vy = ball.vy - ball.vy * friction * dt
+
 		--Degradation
-		if ballProbs[i].prob < lowestProb and math.abs(ball.vx) <= 0.05 and math.abs(ball.vy) <= 0.05 then
-			ballProbs[i].life = ballProbs[i].life -1
-			if ballProbs[i].life <= 0 then
+		if ball.prob < lowestProb and math.abs(ball.vx) <= 0.05 and math.abs(ball.vy) <= 0.05 then
+			ball.life = ball.life -1 * dt
+			if ball.life <= 0 then
 				removeBall(i)
 			end
 		end
 
 		--Player interaction
-		if loop and checkCollision(ballProbs[i], p1) then
+		if loop and checkCollision(ball, p1) then
 				collide(i, ball, p1)
 		end
 
-		if loop and joysticks and checkCollision(ballProbs[i], p2) then
+		if loop and joysticks and checkCollision(ball, p2) then
 				collide(i, ball, p2)
 		end
 
 		--Wall interaction
 		--Wall X
 		if loop and math.abs(ball.x) >= (winWidth / 2 - ballSize) and math.abs(ball.y) > (goalSize) then 
-			if ball.x > 0 then ballProbs[i].x = (winWidth / 2 - ballSize - 1) end
-			if ball.x < 0 then ballProbs[i].x = (-winWidth / 2 + ballSize + 1) end
+			if ball.x > 0 then ball.x = (winWidth / 2 - ballSize - 1) end
+			if ball.x < 0 then ball.x = (-winWidth / 2 + ballSize + 1) end
 			reflectX(i)
 		end
 		--Wall Y
 		if loop and math.abs(ball.y) >= (playHeight / 2 - ballSize) then
-			if ball.y > 0 then ballProbs[i].y = (playHeight / 2 - ballSize - 16) end
-			if ball.y < 0 then ballProbs[i].y = (-playHeight / 2 + ballSize + 16) end
+			if ball.y > 0 then ball.y = (playHeight / 2 - ballSize - 16) end
+			if ball.y < 0 then ball.y = (-playHeight / 2 + ballSize + 16) end
 			reflectY(i)
 		end
 		--SCORE!
 		if loop and ball.x >= (winWidth / 2) and math.abs(ball.y) <= (goalSize) then
-			scoreBottom = scoreBottom + ballProbs[i].prob / 100
+			scoreRight = scoreRight + ball.prob / 100
 			removeBall(i)
 		end
 		if loop and ball.x <= (-winWidth / 2) and math.abs(ball.y) <= (goalSize) then
-			scoreTop = scoreTop + ballProbs[i].prob / 100
+			scoreLeft = scoreLeft + ball.prob / 100
 			removeBall(i)
 		end
 		loop = true
@@ -269,7 +272,8 @@ function love.draw()
 		love.graphics.circle("fill", ballProbs[i].x, ballProbs[i].y, ballSize)
 	end
 	love.graphics.setColor(0, 0.2, 0.8, .2)
-	love.graphics.printf(scoreTop, -winWidth/4, -playHeight/2 + 20, winWidth/2, "center")
-	love.graphics.printf(scoreBottom, -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
-	love.graphics.printf(totalProb .. "%", -winWidth/4, 0, winWidth/2, "center")
+	love.graphics.printf(scoreLeft, -winWidth/2, -playHeight/2 + 20, winWidth/2, "center")
+	love.graphics.printf(scoreRight, 0, -playHeight/2 + 20, winWidth/2, "center")
+	love.graphics.printf("TOTAL PROB: " .. totalProb .. "%", -winWidth/2, playHeight/2 - 40, winWidth/2, "center")
+	love.graphics.printf(count .. " PUCKS", 0, playHeight/2 - 40, winWidth/2, "center")
 end
