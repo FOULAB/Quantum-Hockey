@@ -1,5 +1,6 @@
 local windowed = false
 local paused = false
+local projector = false
 
 local winWidth = 1024
 local winHeight = 768
@@ -128,11 +129,15 @@ function love.load()
     ballProbs[1] = ballObject:new{}
     totalProb = 100
     count = 1
-    font = love.graphics.setNewFont(18)
+    scoreFont = love.graphics.setNewFont(54)
+    infoFont = love.graphics.setNewFont(18)
     love.graphics.setLineWidth(2)
 
     --Check for Joysticks
     if joysticks and next(joysticks) == nil then joysticks = false end
+    
+    --Check to see if the projector is being used (just checks resolution)
+    if winWidth == 1024 then projector = true end
 end
 	
 function love.update(dt)
@@ -235,20 +240,21 @@ function love.update(dt)
 		end
 		--SCORE!
 		if loop and ball.x >= (winWidth / 2) and math.abs(ball.y) <= (goalSize) then
-			scoreRight = scoreRight + ball.prob / 100
+			scoreLeft = scoreLeft + ball.prob / 100
 			removeBall(i)
 		end
 		if loop and ball.x <= (-winWidth / 2) and math.abs(ball.y) <= (goalSize) then
-			scoreLeft = scoreLeft + ball.prob / 100
+			scoreRight = scoreRight + ball.prob / 100
 			removeBall(i)
 		end
 		loop = true
 	end
 end
 
-function love.draw()
-	love.graphics.translate(winWidth/2, winHeight/2)
-	love.graphics.setColor(1, 1, 1)
+--GRAPHICS
+
+function drawBG()
+    love.graphics.setColor(1, 1, 1)
 	love.graphics.rectangle("fill", -winWidth/2, -playHeight/2, winWidth, playHeight)
 	love.graphics.setColor(1,0.14,0.34, 0.2)
 	love.graphics.circle("line", 0, 0, playHeight/4)
@@ -256,24 +262,44 @@ function love.draw()
 	love.graphics.circle("line", -winWidth/2, 0, goalSize)
 	love.graphics.setColor(0, 0.2, 0.8, 0.2)
 	love.graphics.line(0, -playHeight/2, 0, playHeight/2)
+end
 
+function love.draw()
+	love.graphics.translate(winWidth/2, winHeight/2)
+	
+    --Background
+    if projector then
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.rectangle("line", -winWidth/2, -playHeight/2, winWidth, playHeight)
+    else
+        drawBG()
+    end
+    
+    --Score
+    love.graphics.setColor(0.4, 0.7, 1)
+    love.graphics.setFont(scoreFont)
+	love.graphics.printf(scoreLeft, -winWidth/2, -playHeight/2 + 20, winWidth/2, "center")
+	love.graphics.printf(scoreRight, 0, -playHeight/2 + 20, winWidth/2, "center")
+    love.graphics.setFont(infoFont)
+	love.graphics.printf("TOTAL PROB: " .. totalProb .. "%", -winWidth/2, playHeight/2 - 40, winWidth/2, "center")
+	love.graphics.printf(count .. " PUCKS", 0, playHeight/2 - 40, winWidth/2, "center")
+    
+    --New puck animation
 	if newBall then
 		love.graphics.setColor(1,0.14,0.34, (playHeight/4)/ballIntro - 1)
 		love.graphics.circle("fill", 0, 0, ballIntro)
 	end
 
+    --Player position
 	love.graphics.setColor(0.3, 0.3, 0.3)
 	love.graphics.circle("fill", p1.x, p1.y, playerSize)
 	if joysticks then love.graphics.circle("fill", p2.x, p2.y, playerSize) end
 
+    --Pucks
 	for i = #ballProbs, 1, -1  do
 		love.graphics.setColor(1,0.14,0.34,  1 - (100 - ballProbs[i].prob)/102)
 		if ballProbs[i].life < maxLife then love.graphics.setColor(0.5,0.14, 1, 0.02) end
 		love.graphics.circle("fill", ballProbs[i].x, ballProbs[i].y, ballSize)
 	end
-	love.graphics.setColor(0, 0.2, 0.8, .2)
-	love.graphics.printf(scoreLeft, -winWidth/2, -playHeight/2 + 20, winWidth/2, "center")
-	love.graphics.printf(scoreRight, 0, -playHeight/2 + 20, winWidth/2, "center")
-	love.graphics.printf("TOTAL PROB: " .. totalProb .. "%", -winWidth/2, playHeight/2 - 40, winWidth/2, "center")
-	love.graphics.printf(count .. " PUCKS", 0, playHeight/2 - 40, winWidth/2, "center")
+	
 end
