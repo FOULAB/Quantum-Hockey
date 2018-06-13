@@ -15,6 +15,8 @@ ringHeight = 8;
 module handle(){
      cylinder(h = handleHeight - handleRadius, r1 = handleRadius - handleTaper, r2 = handleRadius);
     }
+module handleHole(){
+    cylinder(h = handleHeight - handleRadius, r1 = handleRadius - wallThickness - handleTaper, r2 = handleRadius - wallThickness);}
 //bottom
 difference(){
     union(){
@@ -28,10 +30,11 @@ difference(){
     }
     union(){
         //holes
-            cylinder(h = handleHeight - handleRadius, r1 = handleRadius - wallThickness - handleTaper, r2 = handleRadius - wallThickness);
+            handleHole();
         translate([0,0, handleHeight - handleRadius]) cylinder(h = 3* wallThickness, r = handleRadius - wallThickness, center = true);
             //battery
             translate([-13.25,-8.75, handleHeight - handleRadius - innerHeight-48.5]) cube([26.5 + clearance, 17.5 + clearance, 48.5 + clearance]);
+        translate([0,0,handleHeight - handleRadius - ringHeight]) cylinder(h=50, r=50);
     }
 }
 
@@ -55,13 +58,14 @@ union(){
 }
 
 //ring
-    translate([-50,0,0]) difference(){
-        cylinder(h = handleHeight - handleRadius, r1 = handleRadius - handleTaper, r2 = handleRadius);
+   translate([-50,0,0]) union(){
+        difference(){
+        handle();
         
     union(){
         //holes
         difference(){
-            cylinder(h = handleHeight - handleRadius, r1 = handleRadius - wallThickness - handleTaper, r2 = handleRadius - wallThickness);
+            handleHole();
             translate([0,0,-5]) cylinder(h=handleHeight-handleRadius - innerHeight + 5, r = handleRadius);
             }
         translate([0,0, handleHeight - handleRadius]) cylinder(h = 3* wallThickness, r = handleRadius - wallThickness, center = true);
@@ -69,4 +73,17 @@ union(){
            cylinder(h = handleHeight - handleRadius - ringHeight, r = handleRadius + clearance);
             
     }
+    }
+    cylinder();
 }
+
+//switch holder
+difference(){
+    handle();
+    union(){
+        cylinder(h = 10, r= handleRadius, center = true);
+        translate([0,0,5+9]) cylinder(h = handleHeight, r= handleRadius);
+        }
+        translate([-2.15,-5.75,5]) cube([4.3, 11.5, 6]);
+        translate([-1.25, -4, 0]) cube([2.5,8, 30]);
+    }
