@@ -15,8 +15,8 @@ ringHeight = 8;
 module handle(){
      cylinder(h = handleHeight - handleRadius, r1 = handleRadius - handleTaper, r2 = handleRadius);
     }
-module handleHole(){
-    cylinder(h = handleHeight - handleRadius, r1 = handleRadius - wallThickness - handleTaper, r2 = handleRadius - wallThickness);}
+module handleHole(clr = 0){
+    cylinder(h = handleHeight - handleRadius, r1 = handleRadius - wallThickness - handleTaper - clr, r2 = handleRadius - wallThickness - clr);}
 //bottom
 difference(){
     union(){
@@ -33,49 +33,50 @@ difference(){
             handleHole();
         translate([0,0, handleHeight - handleRadius]) cylinder(h = 3* wallThickness, r = handleRadius - wallThickness, center = true);
             //battery
-            translate([-13.25,-8.75, handleHeight - handleRadius - innerHeight-48.5]) cube([26.5 + clearance, 17.5 + clearance, 48.5 + clearance]);
+            translate([-13.25,-8.75, handleHeight - handleRadius - innerHeight-48.5]) cube([26.5, 17.5, 48.5]);
         translate([0,0,handleHeight - handleRadius - ringHeight]) cylinder(h=50, r=50);
     }
 }
 
 //Top
-union(){
+translate([50, 0, 0]) union(){
     difference(){
-        translate([50,0,handleHeight - handleRadius]) sphere(handleRadius);
+        translate([0,0,handleHeight - handleRadius]) sphere(handleRadius);
         
         //holes
         union(){
-            translate([50,0,handleHeight - handleRadius]) sphere(handleRadius - wallThickness - clearance);
-            translate([50,0,handleHeight]) cylinder(h = wallThickness * 3, r = ledRadius, center = true);
-            translate([50,0,0]) cylinder(h = handleHeight - handleRadius, r = handleRadius + wallThickness);
+            translate([0,0,handleHeight - handleRadius]) sphere(handleRadius - wallThickness - clearance);
+            translate([0,0,handleHeight]) cylinder(h = wallThickness * 3, r = ledRadius, center = true);
+            translate([0,0,0]) cylinder(h = handleHeight - handleRadius, r = handleRadius + wallThickness);
         }
     }
     difference(){
-        translate([50,0,handleHeight - handleRadius]) cylinder(h = wallThickness * 3 - clearance * 2, r = handleRadius - wallThickness -clearance, center =true);
-        translate([50,0,handleHeight - handleRadius]) cylinder(h = wallThickness * 4, r = handleRadius - wallThickness -clearance - wallThickness/2, center =true);
+        translate([0,0,handleHeight - handleRadius]) cylinder(h = wallThickness * 2 - clearance * 2, r = handleRadius - wallThickness -clearance, center =true);
+        translate([0,0,handleHeight - handleRadius]) cylinder(h = wallThickness * 4, r = handleRadius - wallThickness -clearance - wallThickness/2, center =true);
     }
     
 }
 
 //ring
-   translate([-50,0,0]) union(){
-        difference(){
-        handle();
+   translate([-50,0,0]) difference(){
+        union(){
+            difference(){
+                handle();
+                cylinder(h = handleHeight - handleRadius - ringHeight, r = handleRadius + clearance);
+                }
+            handleHole(clearance/2);
+        }
         
     union(){
         //holes
-        difference(){
-            handleHole();
-            translate([0,0,-5]) cylinder(h=handleHeight-handleRadius - innerHeight + 5, r = handleRadius);
-            }
-        translate([0,0, handleHeight - handleRadius]) cylinder(h = 3* wallThickness, r = handleRadius - wallThickness, center = true);
-            
-           cylinder(h = handleHeight - handleRadius - ringHeight, r = handleRadius + clearance);
+        translate([0,0, handleHeight - handleRadius]) cylinder(h = 2.5* wallThickness, r = handleRadius - wallThickness, center = true);
+        cylinder(h = handleHeight - handleRadius - ringHeight*2, r= handleRadius); 
+        translate([-25,-8.75,handleHeight-handleRadius-ringHeight-50]) cube([50, 17.5, 50]);
+        handleHole(wallThickness);
+        //translate([0,0,handleHeight-handleRadius-ringHeight]) cylinder(h=);
             
     }
     }
-    cylinder();
-}
 
 //switch holder
 difference(){
