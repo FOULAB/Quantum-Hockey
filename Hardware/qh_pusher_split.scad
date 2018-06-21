@@ -79,14 +79,14 @@ module ring(){
                 handle();
                 cylinder(h = handleHeight - handleRadius - ringHeight, r = handleRadius + clearance);
                 }
-            handleHole(clearance/2);
+            handleHole();
         }
         
     union(){
         //holes
         translate([0,0, handleHeight - handleRadius]) cylinder(h = 2.5* wallThickness, r = handleRadius - wallThickness, center = true);
         cylinder(h = handleHeight - handleRadius - ringHeight*2, r= handleRadius); 
-        translate([-25,-8.75,handleHeight-handleRadius-ringHeight-50]) cube([50, 17.5, 50]);
+        translate([-25,-8.75,handleHeight-handleRadius-ringHeight-52]) cube([50, 17.5, 50]);
         handleHole(wallThickness);
     }
     }
