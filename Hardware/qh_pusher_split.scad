@@ -5,15 +5,15 @@ handleRadius = 40 / 2;
 handleHeight = 115;
 baseRadius = 95 /2;
 wallThickness = 4;
-ledRadius = 5.1 / 2;
+ledRadius = 5.2 / 2;
 handleTaper = 5;
-clearance = 0.4; //Tailor's fault
+clearance = 0.1;
 innerHeight = 12;
 
 ringHeight = 8;
 
 module handle(){
-     cylinder(h = handleHeight - handleRadius, r1 = handleRadius - handleTaper, r2 = handleRadius);
+     cylinder(h = handleHeight - handleRadius, r1 = handleRadius - handleTaper, r2 = handleRadius, $fn = 60);
     }
 module handleHole(clr = 0){
     cylinder(h = handleHeight - handleRadius, r1 = handleRadius - wallThickness - handleTaper - clr, r2 = handleRadius - wallThickness - clr);
@@ -29,6 +29,7 @@ module main() {
             translate([0,0,2.5]) cylinder(h = wallThickness * 2, r = baseRadius - 3);
         }
         handle();
+        translate([0,0,2.5]) cylinder(h= 5, r1 = baseRadius /2, r2 = handleRadius - handleTaper, $fn = 60 );
         
     }
     union(){
@@ -53,14 +54,14 @@ difference(){
 }
 //Top
 module lid() {
-    translate([50, 0, 0]) union(){
+    union(){
     difference(){
-        translate([0,0,handleHeight - handleRadius]) sphere(handleRadius);
+        translate([0,0,handleHeight - handleRadius]) sphere(handleRadius, $fn = 60);
         
         //holes
         union(){
             translate([0,0,handleHeight - handleRadius]) sphere(handleRadius - wallThickness - clearance);
-            translate([0,0,handleHeight]) cylinder(h = wallThickness * 3, r = ledRadius, center = true);
+            translate([0,0,handleHeight]) cylinder(h = wallThickness * 3, r = ledRadius, center = true, $fn = 20);
             translate([0,0,0]) cylinder(h = handleHeight - handleRadius, r = handleRadius + wallThickness);
         }
     }
@@ -73,7 +74,7 @@ module lid() {
 }
 //ring
 module ring(){
-    translate([-50,0,0]) difference(){
+    difference(){
         union(){
             difference(){
                 handle();
@@ -92,7 +93,23 @@ module ring(){
     }
 }
 
+module mmLid(){
+    union(){
+    difference(){
+        translate([0,0,handleHeight - handleRadius]) sphere(handleRadius, $fn = 60);
+        
+        //holes
+        union(){
+            translate([0,0,handleHeight - handleRadius]) sphere(handleRadius - wallThickness);
+            translate([0,0,0]) cylinder(h = handleHeight - handleRadius, r = handleRadius + wallThickness);
+            //Led
+            translate([0,0,handleHeight]) cylinder(h = wallThickness * 3, r = ledRadius, center = true, $fn = 20);
+        }
+    }
+    }
+}
 //render:
 main();
-lid();
-ring();
+//lid();
+translate([50,0,0]) ring();
+translate([50,0,0]) mmLid();
