@@ -1,6 +1,6 @@
 local windowed = false
 local paused = false
-local projector = false
+local projector = true
 
 local winWidth = 1024
 local winHeight = 768
@@ -297,7 +297,7 @@ function love.draw()
 
     --Pucks
 	for i = #ballProbs, 1, -1  do
-		love.graphics.setColor(1,0.14,0.34,  1 - (100 - ballProbs[i].prob)/102)
+		love.graphics.setColor(1,1,1,  1 - (100 - ballProbs[i].prob)/102)
 		if ballProbs[i].life < maxLife then love.graphics.setColor(0.5,0.14, 1, 0.02) end
 		love.graphics.circle("fill", ballProbs[i].x, ballProbs[i].y, ballSize)
 	end
