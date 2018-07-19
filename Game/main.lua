@@ -2,8 +2,8 @@ local windowed = false
 local paused = false
 local projector = true
 
-local winWidth = 1024
-local winHeight = 768
+local winWidth = 1280
+local winHeight = 720
 local playHeight = 524.5
 local goalSize = playHeight * 0.286
 local friction = 0.985
@@ -17,6 +17,7 @@ local ballSize = 20
 local playerSize = 34
 local loop = true
 local lowestProb = 2
+local roundWinner = 1
 
 local newBall = false
 local ballIntro = playHeight/4
@@ -32,6 +33,8 @@ end
 
 local scoreLeft = 0
 local scoreRight = 0
+local prevScoreLeft = 0
+local prevScoreRight = 0
 local totalProb = 100
 local p1={x =0, y=0, prevX=0, prevY=0, vx=0, vy=0, mass = 1.1}
 local p2={x =0, y=0, prevX=0, prevY=0, vx=0, vy=0, mass = 1.1}
@@ -129,32 +132,65 @@ function love.load()
     ballProbs[1] = ballObject:new{}
     totalProb = 100
     count = 1
-    scoreFont = love.graphics.setNewFont(54)
-    infoFont = love.graphics.setNewFont(18)
+    scoreFont = love.graphics.setNewFont('uni0553-webfont.ttf', 54)
+    infoFont = love.graphics.setNewFont('uni0553-webfont.ttf', 18)
     love.graphics.setLineWidth(2)
 
     --Check for Joysticks
     if joysticks and next(joysticks) == nil then joysticks = false end
     
-    --Check to see if the projector is being used (just checks resolution)
-    if winWidth == 1024 then projector = true end
+    --animation
+    animation = newAnimation(love.graphics.newImage("qh_logo_sprite.png"), 200, 200, 1)
+    
 end
-	
+
+function addPuck()
+    if scoreLeft - prevScoreLeft > scoreRight - prevScoreRight then
+        roundWinner = true
+    else 
+        roundWinner = false
+    end
+    
+    newBall = true
+    ballIntro = ballIntro - (playHeight/1.5)/ ballIntro
+
+    if ballIntro <= ballSize then
+        count = count + 1
+        ballProbs[count] = ballObject:new{vx = speed * (round(love.math.random(0,1)) * 2 -1), vy = speed * (round(love.math.random(0,1)) * 2 -1)}
+        newBall = false
+        ballIntro = playHeight/4
+        
+        prevScoreLeft = scoreLeft
+        prevScoreRight = scoreRight
+    end
+end
+
 function love.update(dt)
 	function love.keypressed(key, unicode)
 		if key == 'escape' then
 			windowed = true
-			winWidth = 1024
-			winHeight = 768
+			winWidth = 1280
+			winHeight = 720
 			love.load()
 		end
 
 		if key == 'p' then
 			paused = not paused
 		end
+        
+        if key == 'q' then
+			love.event.quit()
+		end
+        
 	end
 
 	if paused == true then return end
+    
+    --animation test
+    animation.currentTime = animation.currentTime + dt
+    if animation.currentTime >= animation.duration then
+        animation.currentTime = animation.currentTime - animation.duration
+    end
 
 	--Get player position and velocity
 	p1.prevX = p1.x
@@ -184,16 +220,8 @@ function love.update(dt)
 
 	if totalProb < 40 then
 
-		--Move this into its own function
-		newBall = true
-		ballIntro = ballIntro - (playHeight/1.5)/ ballIntro
-
-		if ballIntro <= ballSize then
-			count = count + 1
-			ballProbs[count] = ballObject:new{vx = speed * (round(love.math.random(0,1)) * 2 -1), vy = speed * (round(love.math.random(0,1)) * 2 -1)}
-			newBall = false
-			ballIntro = playHeight/4
-		end
+		addPuck();
+		
 	end
 	for i=#ballProbs,1,-1 do
 
@@ -253,6 +281,24 @@ end
 
 --GRAPHICS
 
+function newAnimation(image, width, height, duration)
+    local animation = {}
+    animation.spriteSheet = image
+    animation.quads = {}
+    image:setFilter('nearest', 'nearest')
+    
+    for y = 0, image:getHeight() - height, height do
+        for x = 0, image:getWidth() - width, width do
+            table.insert(animation.quads, love.graphics.newQuad(x,y, width,height, image:getDimensions()))
+        end
+    end
+    
+    animation.duration = duration or 1
+    animation.currentTime = 0
+    
+    return animation
+end
+
 function drawBG()
     love.graphics.setColor(1, 1, 1)
 	love.graphics.rectangle("fill", -winWidth/2, -playHeight/2, winWidth, playHeight)
@@ -275,10 +321,15 @@ function love.draw()
         drawBG()
     end
     
+    --animated logo
+    local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
+    love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], -200, -200, 0, 2)
+    
     --Score
-    love.graphics.setColor(0.4, 0.7, 1)
     love.graphics.setFont(scoreFont)
+    love.graphics.setColor(1, 0.25, 0.25)
 	love.graphics.printf(scoreLeft, -winWidth/2, -playHeight/2 + 20, winWidth/2, "center")
+    love.graphics.setColor(0.25, 0.47, 1)
 	love.graphics.printf(scoreRight, 0, -playHeight/2 + 20, winWidth/2, "center")
     love.graphics.setFont(infoFont)
 	love.graphics.printf("TOTAL PROB: " .. totalProb .. "%", -winWidth/2, playHeight/2 - 40, winWidth/2, "center")
@@ -286,18 +337,25 @@ function love.draw()
     
     --New puck animation
 	if newBall then
-		love.graphics.setColor(1,0.14,0.34, (playHeight/4)/ballIntro - 1)
+        if roundWinner then
+            love.graphics.setColor(1,0.25,0.25, (playHeight/4)/ballIntro - 1)
+        else
+            love.graphics.setColor(0.25,0.47,1, (playHeight/4)/ballIntro - 1)
+        end
 		love.graphics.circle("fill", 0, 0, ballIntro)
 	end
 
     --Player position
-	love.graphics.setColor(0.3, 0.3, 0.3)
-	love.graphics.circle("fill", p1.x, p1.y, playerSize)
-	if joysticks then love.graphics.circle("fill", p2.x, p2.y, playerSize) end
+	love.graphics.setColor(1, 0.25, 0.25)
+	love.graphics.circle("line", p1.x, p1.y, playerSize)
+	if joysticks then
+        love.graphics.setColor(0.25,0.47,1)
+        love.graphics.circle("line", p2.x, p2.y, playerSize)
+    end
 
     --Pucks
 	for i = #ballProbs, 1, -1  do
-		love.graphics.setColor(1,1,1,  1 - (100 - ballProbs[i].prob)/102)
+		love.graphics.setColor(1,1,1,  1 - (100 - ballProbs[i].prob)/104)
 		if ballProbs[i].life < maxLife then love.graphics.setColor(0.5,0.14, 1, 0.02) end
 		love.graphics.circle("fill", ballProbs[i].x, ballProbs[i].y, ballSize)
 	end
