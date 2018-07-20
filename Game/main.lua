@@ -355,7 +355,7 @@ function love.draw()
 
     --Pucks
 	for i = #ballProbs, 1, -1  do
-		love.graphics.setColor(1,1,1,  1 - (100 - ballProbs[i].prob)/104)
+		love.graphics.setColor(1,1,1,  1 - (100 - ballProbs[i].prob)/105)
 		if ballProbs[i].life < maxLife then love.graphics.setColor(0.5,0.14, 1, 0.02) end
 		love.graphics.circle("fill", ballProbs[i].x, ballProbs[i].y, ballSize)
 	end
