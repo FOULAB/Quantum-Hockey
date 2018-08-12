@@ -1,6 +1,7 @@
 local windowed = false
 local paused = false
 local projector = true
+local displayMenu = false
 
 local winWidth = 1280
 local winHeight = 720
@@ -8,16 +9,16 @@ local playHeight = 524.5
 local goalSize = playHeight * 0.286
 local friction = 0.985
 
-local speed = 1
+local speed = 10
 local maxLife = 4 --(seconds after immobility)
 local ballObject = {x = 0, y = 0, vx = speed, vy = speed, mass=1, prob = 100, life = maxLife}
 local ballProbs = {}
-local count = 1
+local count = 0
 local ballSize = 20
 local playerSize = 34
 local loop = true
 local lowestProb = 2
-local roundWinner = 1
+local roundWinner = -1
 
 local newBall = false
 local ballIntro = playHeight/4
@@ -50,6 +51,7 @@ function ballObject:new (o)
   self.__index = self
   return o
 end
+
 
 function checkCollision(ball, player)
     local dist = (ball.x - player.x)^2 + (ball.y - player.y)^2
@@ -129,9 +131,9 @@ function love.load()
     ballProbs = {}
     scoreLeft = 0
     scoreRight = 0
-    ballProbs[1] = ballObject:new{}
-    totalProb = 100
-    count = 1
+    roundWinner = round(love.math.random(0,1)) * 2 -1 --randomize starting player
+    totalProb = 0
+    count = 0
     scoreFont = love.graphics.setNewFont('uni0553-webfont.ttf', 54)
     infoFont = love.graphics.setNewFont('uni0553-webfont.ttf', 18)
     love.graphics.setLineWidth(2)
@@ -146,9 +148,10 @@ end
 
 function addPuck()
     if scoreLeft - prevScoreLeft > scoreRight - prevScoreRight then
-        roundWinner = true
-    else 
-        roundWinner = false
+        roundWinner = 1 --left won the round
+    else if count > 0 then --fix for first puck
+        roundWinner = -1 -- right won the round
+        end
     end
     
     newBall = true
@@ -156,7 +159,7 @@ function addPuck()
 
     if ballIntro <= ballSize then
         count = count + 1
-        ballProbs[count] = ballObject:new{vx = speed * (round(love.math.random(0,1)) * 2 -1), vy = speed * (round(love.math.random(0,1)) * 2 -1)}
+        ballProbs[count] = ballObject:new{vx = speed * roundWinner, vy = love.math.random(0,1) * speed / 2 + (round(love.math.random(0,1)) * 2 -1)}
         newBall = false
         ballIntro = playHeight/4
         
@@ -167,7 +170,7 @@ end
 
 function love.update(dt)
 	function love.keypressed(key, unicode)
-		if key == 'escape' then
+		if key == 'w' then
 			windowed = true
 			winWidth = 1280
 			winHeight = 720
@@ -182,9 +185,19 @@ function love.update(dt)
 			love.event.quit()
 		end
         
+        if key == 'r' then
+			love.load()
+		end
+        
+        if key == 'escape' then
+            paused = not paused
+            displayMenu = not displayMenu
+        end
+        
 	end
+    
+    
 
-	if paused == true then return end
     
     --animation test
     animation.currentTime = animation.currentTime + dt
@@ -211,7 +224,14 @@ function love.update(dt)
 	p1.vy = p1.y - p1.prevY
 	p2.vx = p2.x - p2.prevX
 	p2.vy = p2.y - p2.prevY
+    
+    if displayMenu then
+        
+    end
+    
 
+    if paused then return end
+    
 	--OPTIMIZATION: maybe modify this to change only when the total probability changes (ball removed, new ball)
 	totalProb = 0
 	for i = 1, #ballProbs do
@@ -310,6 +330,7 @@ function drawBG()
 	love.graphics.line(0, -playHeight/2, 0, playHeight/2)
 end
 
+
 function love.draw()
 	love.graphics.translate(winWidth/2, winHeight/2)
 	
@@ -321,9 +342,6 @@ function love.draw()
         drawBG()
     end
     
-    --animated logo
-    local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
-    love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], -200, -200, 0, 2)
     
     --Score
     love.graphics.setFont(scoreFont)
@@ -334,10 +352,11 @@ function love.draw()
     love.graphics.setFont(infoFont)
 	love.graphics.printf("TOTAL PROB: " .. totalProb .. "%", -winWidth/2, playHeight/2 - 40, winWidth/2, "center")
 	love.graphics.printf(count .. " PUCKS", 0, playHeight/2 - 40, winWidth/2, "center")
+	love.graphics.printf("winner Left" .. roundWinner, -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
     
     --New puck animation
 	if newBall then
-        if roundWinner then
+        if roundWinner < 0 then
             love.graphics.setColor(1,0.25,0.25, (playHeight/4)/ballIntro - 1)
         else
             love.graphics.setColor(0.25,0.47,1, (playHeight/4)/ballIntro - 1)
@@ -359,5 +378,14 @@ function love.draw()
 		if ballProbs[i].life < maxLife then love.graphics.setColor(0.5,0.14, 1, 0.02) end
 		love.graphics.circle("fill", ballProbs[i].x, ballProbs[i].y, ballSize)
 	end
+    
+    if displayMenu then
+        love.graphics.setColor(0,0,0,0.5)
+        love.graphics.rectangle("fill", -winWidth/2, -playHeight/2, winWidth, playHeight)
+        love.graphics.setColor(1,1,1,1)
+        --animated logo
+        local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
+        love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], -200, -200, 0, 2)
+    end
 	
 end
