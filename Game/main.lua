@@ -330,6 +330,24 @@ function drawBG()
 	love.graphics.line(0, -playHeight/2, 0, playHeight/2)
 end
 
+-- goal explosions
+function getBlast(size)
+  local blast = love.graphics.newCanvas(size, size)
+  love.graphics.setCanvas(blast)
+  love.graphics.setColor(1,1,1,1)
+  love.graphics.circle("fill", size/2, size/2, size/2)
+  love.graphics.setCanvas()
+  return blast
+end
+
+function getExplosion(image)
+  pSystem = love.graphics.newParticleSystem(image, 30)
+  pSystem:setParticleLifetime(0.5, 0.5)
+  pSystem:setLinearAcceleration(-100, -100, 100, 100)
+  pSystem:setColors(1, 1, 1, 1, 0.25,0.47,1, 1, 0.25,0.47,1)
+  pSystem:setSizes(0.5, 0.5)
+  return pSystem
+end
 
 function love.draw()
 	love.graphics.translate(winWidth/2, winHeight/2)
