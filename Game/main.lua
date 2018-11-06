@@ -1,3 +1,9 @@
+--Wiimote support
+local socket = require("socket")
+local address = ""
+local receivePort = 19
+local sendPort = 17
+
 local windowed = false
 local paused = false
 local projector = true
@@ -13,6 +19,7 @@ local speed = 10
 local maxLife = 4 --(seconds after immobility)
 local ballObject = {x = 0, y = 0, vx = speed, vy = speed, mass=1, prob = 100, life = maxLife}
 local ballProbs = {}
+local explosions = {}
 local count = 0
 local ballSize = 20
 local playerSize = 34
@@ -26,6 +33,8 @@ local ballIntro = playHeight/4
 local joysticks = love.joystick.getJoysticks()
 local joy1 = joysticks[1]
 
+local menuCircle1 = { x = 0, y = 0, completion = 0, active = false}
+local menuCircle2 = { x = 0, y = 0, completion = 0, active = false}
 
 
 function variance()
@@ -113,6 +122,12 @@ function removeBall(i)
 	loop = false
 end
 
+function explode(ball, left)
+    explosions[#explosions + 1] = ballObject:new{x= ball.x, y = ball.y, left = left, size = ballSize, prob = ball.prob}
+end
+
+------------------ LOVE LOAD -------------------
+
 function love.load()
     love.window.setMode(winWidth, winHeight, {resizable=false, vsync=true, msaa=4})
     if not windowed then
@@ -127,6 +142,10 @@ function love.load()
 	ballSize = winWidth * 0.038 /2
 	playerSize = winWidth * 0.066 /2
 
+    menuCircle1.x = -winWidth/2.5
+    menuCircle1.y = playHeight/3
+    menuCircle2.x = winWidth/2.5
+    menuCircle2.y = -playHeight/3
 
     ballProbs = {}
     scoreLeft = 0
@@ -142,7 +161,7 @@ function love.load()
     if joysticks and next(joysticks) == nil then joysticks = false end
     
     --animation
-    animation = newAnimation(love.graphics.newImage("qh_logo_sprite.png"), 200, 200, 1)
+    animation = newAnimation(love.graphics.newImage("qh_logo_sprite_transp2.png"), 200, 200, 1)
     
 end
 
@@ -243,6 +262,23 @@ function love.update(dt)
 		addPuck();
 		
 	end
+    
+    --Menu interaction
+    if loop and checkCollision(menuCircle1, p1) then
+        menuCircle1.active = true
+        menuCircle1.completion = menuCircle1.completion + dt*5
+        if menuCircle1.completion >= 10 then
+            menuCircle1.active = false
+            menuCircle1.completion = 0
+            paused = true
+            displayMenu = true
+        end
+    elseif menuCircle1.active then
+        menuCircle1.active = false
+        menuCircle1.completion = 0
+    end
+    
+    
 	for i=#ballProbs,1,-1 do
 
 		--(Optimization)
@@ -289,14 +325,24 @@ function love.update(dt)
 		--SCORE!
 		if loop and ball.x >= (winWidth / 2) and math.abs(ball.y) <= (goalSize) then
 			scoreLeft = scoreLeft + ball.prob / 100
+            explode(ball, false)
 			removeBall(i)
 		end
 		if loop and ball.x <= (-winWidth / 2) and math.abs(ball.y) <= (goalSize) then
 			scoreRight = scoreRight + ball.prob / 100
+            explode(ball, true)
 			removeBall(i)
 		end
 		loop = true
 	end
+    
+    for i=#explosions,1,-1 do
+        local explosion = explosions[i]
+        explosion.size = explosion.size + (ballSize * 10)/explosion.size * 60 * dt
+        if explosion.size > ballSize * 5 then
+            table.remove(explosions, i)
+        end
+    end
 end
 
 --GRAPHICS
@@ -330,24 +376,6 @@ function drawBG()
 	love.graphics.line(0, -playHeight/2, 0, playHeight/2)
 end
 
--- goal explosions
-function getBlast(size)
-  local blast = love.graphics.newCanvas(size, size)
-  love.graphics.setCanvas(blast)
-  love.graphics.setColor(1,1,1,1)
-  love.graphics.circle("fill", size/2, size/2, size/2)
-  love.graphics.setCanvas()
-  return blast
-end
-
-function getExplosion(image)
-  pSystem = love.graphics.newParticleSystem(image, 30)
-  pSystem:setParticleLifetime(0.5, 0.5)
-  pSystem:setLinearAcceleration(-100, -100, 100, 100)
-  pSystem:setColors(1, 1, 1, 1, 0.25,0.47,1, 1, 0.25,0.47,1)
-  pSystem:setSizes(0.5, 0.5)
-  return pSystem
-end
 
 function love.draw()
 	love.graphics.translate(winWidth/2, winHeight/2)
@@ -372,6 +400,24 @@ function love.draw()
 	love.graphics.printf(count .. " PUCKS", 0, playHeight/2 - 40, winWidth/2, "center")
 	love.graphics.printf("winner Left" .. roundWinner, -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
     
+    --Menu circles
+    love.graphics.setColor(1,1,1, 0.3)
+    love.graphics.setLineWidth(1)
+    love.graphics.circle("line", menuCircle1.x, menuCircle1.y, playerSize)
+    love.graphics.circle("line", menuCircle2.x, menuCircle2.y, playerSize)
+    if menuCircle1.active then 
+        love.graphics.setLineWidth(15)
+        love.graphics.setColor(1, 0.25, 0.25)
+        love.graphics.arc("line", "open", menuCircle1.x, menuCircle1.y, playerSize +7.5, 0, math.pi * 0.2 * menuCircle1.completion)
+        love.graphics.setLineWidth(1)
+    end
+    if menuCircle2.active then 
+        love.graphics.setLineWidth(15)
+        love.graphics.setColor(0.25, 0.47, 1)
+        love.graphics.arc("line", "open", menuCircle2.x, menuCircle2.y, playerSize +7.5, 0, math.pi * 0.2 * menuCircle2.completion)
+        love.graphics.setLineWidth(1)
+    end
+    
     --New puck animation
 	if newBall then
         if roundWinner < 0 then
@@ -388,6 +434,17 @@ function love.draw()
 	if joysticks then
         love.graphics.setColor(0.25,0.47,1)
         love.graphics.circle("line", p2.x, p2.y, playerSize)
+    end
+    
+    --Explosions (goal)
+    for i = #explosions, 1, -1 do
+        local explosion = explosions[i]
+        if explosion.left then
+            love.graphics.setColor(1,0.25,0.25, (1 - (100 - explosion.prob)/110) *(ballSize * 5 -explosion.size)/(ballSize*5))
+        else
+            love.graphics.setColor(0.25,0.47,1, (1 - (100 - explosion.prob)/110) *(ballSize * 5 -explosion.size)/(ballSize*5))
+        end
+        love.graphics.circle("fill", explosion.x, explosion.y, explosion.size)
     end
 
     --Pucks
