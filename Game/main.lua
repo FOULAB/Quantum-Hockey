@@ -6,7 +6,6 @@
 
 --local py = require("python");
 
-
 local windowed = false
 local paused = false
 local projector = true
