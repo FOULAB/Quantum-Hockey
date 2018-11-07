@@ -1,8 +1,10 @@
 --Wiimote support
-local socket = require("socket")
-local address = ""
-local receivePort = 19
-local sendPort = 17
+--local socket = require("socket")
+--local address = ""
+--local receivePort = 19
+--local sendPort = 17
+--00:1C:BE:23:FF:4E
+
 
 local windowed = false
 local paused = false
