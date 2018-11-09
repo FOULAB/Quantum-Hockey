@@ -1,11 +1,3 @@
---Wiimote support
---local socket = require("socket")
---local address = ""
---local receivePort = 19
---local sendPort = 17
-
-local py = require("python");
-
 local windowed = false
 local paused = false
 local projector = true
@@ -34,6 +26,13 @@ local ballIntro = playHeight/4
 
 local joysticks = love.joystick.getJoysticks()
 local joy1 = joysticks[1]
+if joy1 and not joy1:isGamepad() then
+    local guid = joy1:getGUID()
+    joystick.setGamepadMapping(guid, leftx, axis, 1)
+    joystick.setGamepadMapping(guid, lefty, axis, 2)
+    joystick.setGamepadMapping(guid, rightx, axis, 3)
+    joystick.setGamepadMapping(guid, righty, axis, 4)
+end
 
 local menuCircle1 = { x = 0, y = 0, completion = 0, active = false}
 local menuCircle2 = { x = 0, y = 0, completion = 0, active = false}
@@ -158,6 +157,7 @@ function love.load()
     scoreFont = love.graphics.setNewFont('uni0553-webfont.ttf', 54)
     infoFont = love.graphics.setNewFont('uni0553-webfont.ttf', 18)
     love.graphics.setLineWidth(2)
+    
 
     --Check for Joysticks
     if joysticks and next(joysticks) == nil then joysticks = false end
@@ -400,7 +400,7 @@ function love.draw()
     love.graphics.setFont(infoFont)
 	love.graphics.printf("TOTAL PROB: " .. totalProb .. "%", -winWidth/2, playHeight/2 - 40, winWidth/2, "center")
 	love.graphics.printf(count .. " PUCKS", 0, playHeight/2 - 40, winWidth/2, "center")
-	love.graphics.printf("winner Left" .. roundWinner, -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
+	love.graphics.printf('debug', -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
     
     --Menu circles
     love.graphics.setColor(1,1,1, 0.3)
