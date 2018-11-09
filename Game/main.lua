@@ -28,10 +28,10 @@ local joysticks = love.joystick.getJoysticks()
 local joy1 = joysticks[1]
 if joy1 and not joy1:isGamepad() then
     local guid = joy1:getGUID()
-    joystick.setGamepadMapping(guid, leftx, axis, 1)
-    joystick.setGamepadMapping(guid, lefty, axis, 2)
-    joystick.setGamepadMapping(guid, rightx, axis, 3)
-    joystick.setGamepadMapping(guid, righty, axis, 4)
+    love.joystick.setGamepadMapping(guid, leftx, axis, 1)
+    love.joystick.setGamepadMapping(guid, lefty, axis, 2)
+    love.joystick.setGamepadMapping(guid, rightx, axis, 3)
+    love.joystick.setGamepadMapping(guid, righty, axis, 4)
 end
 
 local menuCircle1 = { x = 0, y = 0, completion = 0, active = false}
