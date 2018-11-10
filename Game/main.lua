@@ -1,7 +1,7 @@
 local windowed = false
-local paused = false
-local projector = true
-local displayMenu = false
+local paused = true
+--local projector = true
+local displayMenu = true
 
 local winWidth = 1280
 local winHeight = 720
@@ -34,9 +34,6 @@ if joy1 and not joy1:isGamepad() then
     love.joystick.setGamepadMapping(guid, 'righty', 'axis', 4)
 end
 
-local menuCircle1 = { x = 0, y = 0, completion = 0, active = false}
-local menuCircle2 = { x = 0, y = 0, completion = 0, active = false}
-
 
 function variance()
 	return love.math.random(-10, 10) / 80
@@ -62,7 +59,48 @@ function ballObject:new (o)
   return o
 end
 
+------------------------------ MENU -----------------------
+function toggleMenu()
+    paused = not paused
+    displayMenu = not displayMenu
+end
 
+function reset()
+    love.load()
+end
+
+function quit()
+    love.event.quit()
+end
+
+local menuItem = { x = 0, y = 0, completion = 0, active = false, action = toggleMenu, text = ''}
+
+function menuItem:new (o)
+  o = o or {}   -- create object if user does not provide one
+  setmetatable(o, self)
+  self.__index = self
+  return o
+end
+
+local menuCircles = {}
+menuCircles[1] = menuItem:new{text = 'MENU'}
+menuCircles[2] = menuItem:new{text = 'MENU'}
+
+local menu = {}
+menu[1] = menuItem:new{action = reset, text = 'RESET'}
+menu[2] = menuItem:new{action = resume, text = 'RESUME'}
+menu[3] = menuItem:new{action = reset, text = 'RESET'}
+menu[4] = menuItem:new{action = resume, text = 'RESUME'}
+
+local startMenu = {}
+startMenu[1] = menuItem:new{action = resume, text = 'START!'}
+startMenu[2] = menuItem:new{action = resume, text = 'START!'}
+
+
+
+
+
+------------------- COLLISIONS --------------------
 function checkCollision(ball, player)
     local dist = (ball.x - player.x)^2 + (ball.y - player.y)^2
     return dist <= (ballSize + playerSize)^2
@@ -127,8 +165,11 @@ function explode(ball, left)
     explosions[#explosions + 1] = ballObject:new{x= ball.x, y = ball.y, left = left, size = ballSize, prob = ball.prob}
 end
 
------------------- LOVE LOAD -------------------
 
+
+---------------------------------------------------
+------------------ LOVE LOAD -------------------
+-------------------------------------------------
 function love.load()
     love.window.setMode(winWidth, winHeight, {resizable=false, vsync=true, msaa=4})
     if not windowed then
@@ -143,10 +184,21 @@ function love.load()
 	ballSize = winWidth * 0.038 /2
 	playerSize = winWidth * 0.066 /2
 
-    menuCircle1.x = -winWidth/2.5
-    menuCircle1.y = playHeight/3
-    menuCircle2.x = winWidth/2.5
-    menuCircle2.y = -playHeight/3
+    -- place menu proportionately to screen size
+    menuCircles[1].x = -winWidth/2.5
+    menuCircles[1].y = playHeight/3
+    menuCircles[2].x = winWidth/2.5
+    menuCircles[2].y = -playHeight/3
+    menu[1].x = winWidth/3
+    menu[1].y = playHeight/4
+    menu[2].x = menu[1].x
+    menu[2].y = -menu[1].y
+    menu[3].x = -menu[1].x
+    menu[3].y = menu[1].y
+    menu[4].x = -menu[1].x
+    menu[4].y = -menu[1].y
+    startMenu[1].x = menu[1].x
+    startMenu[2].x = -startMenu[1].x
 
     ballProbs = {}
     scoreLeft = 0
@@ -189,6 +241,9 @@ function addPuck()
     end
 end
 
+
+
+
 function love.update(dt)
 	function love.keypressed(key, unicode)
 		if key == 'w' then
@@ -203,16 +258,15 @@ function love.update(dt)
 		end
         
         if key == 'q' then
-			love.event.quit()
+			quit()
 		end
         
         if key == 'r' then
-			love.load()
+			reset()
 		end
         
         if key == 'escape' then
-            paused = not paused
-            displayMenu = not displayMenu
+            toggleMenu()
         end
         
 	end
@@ -226,9 +280,9 @@ function love.update(dt)
 	
 	if joysticks then
         p1.x = joy1:getGamepadAxis("leftx") * winWidth/2
-        p1.y = -1 * joy1:getGamepadAxis("lefty") * 0.75 * winWidth/2 --0.75 is the ratio of the Wiimote resolution (768/1024)
+        p1.y = -joy1:getGamepadAxis("lefty") * 0.75 * winWidth/2 --0.75 is the ratio of the Wiimote resolution (768/1024)
         p2.x = joy1:getGamepadAxis("rightx") * winWidth/2
-        p2.y = -1 * joy1:getGamepadAxis("righty") * 0.75 * winWidth/2
+        p2.y = -joy1:getGamepadAxis("righty") * 0.75 * winWidth/2
         
         
         --Hopefully fixes the wiimote's glitch when it loses an IR point.
@@ -254,11 +308,32 @@ function love.update(dt)
         --animation
         animation.currentTime = animation.currentTime + dt
         if animation.currentTime >= animation.duration then
-        animation.currentTime = animation.currentTime - animation.duration
+            animation.currentTime = animation.currentTime - animation.duration
+        end
+        
+        if count == 0 then
+            currentMenu = startMenu
+        else
+            currentMenu = menu
+        end
+    else
+        currentMenu = menuCircles
+    end
+    for i, option in ipairs(currentMenu) do
+        if checkCollision(option, p1) then
+            option.active = true
+            option.completion = option.completion + dt*5
+            if option.completion >= 10 then
+                option.active = false
+                option.completion = 0
+                option.action()
+            end
+        elseif option.active then
+            option.active = false
+            option.completion = 0
         end
     end
     
-
     if paused then return end
     
 	--OPTIMIZATION: maybe modify this to change only when the total probability changes (ball removed, new ball)
@@ -273,26 +348,9 @@ function love.update(dt)
 		
 	end
     
-    --Menu interaction
-    if loop and checkCollision(menuCircle1, p1) then
-        menuCircle1.active = true
-        menuCircle1.completion = menuCircle1.completion + dt*5
-        if menuCircle1.completion >= 10 then
-            menuCircle1.active = false
-            menuCircle1.completion = 0
-            paused = true
-            displayMenu = true
-        end
-    elseif menuCircle1.active then
-        menuCircle1.active = false
-        menuCircle1.completion = 0
-    end
     
     
-	for i=#ballProbs,1,-1 do
-
-		--(Optimization)
-		local ball = ballProbs[i]
+	for i, ball in ipairs(ballProbs) do
 
 		--Move balls before calculating next event
 		ball.x = ball.x + ball.vx
@@ -346,8 +404,7 @@ function love.update(dt)
 		loop = true
 	end
     
-    for i=#explosions,1,-1 do
-        local explosion = explosions[i]
+    for i, explosion in ipairs(explosions) do
         explosion.size = explosion.size + (ballSize * 10)/explosion.size * 60 * dt
         if explosion.size > ballSize * 5 then
             table.remove(explosions, i)
@@ -391,12 +448,12 @@ function love.draw()
 	love.graphics.translate(winWidth/2, winHeight/2)
 	
     --Background
-    if projector then
+    --if projector then
         love.graphics.setColor(1, 1, 1)
         love.graphics.rectangle("line", -winWidth/2, -playHeight/2, winWidth, playHeight)
-    else
-        drawBG()
-    end
+--    else
+--        drawBG()
+--    end
     
     
     --Score
@@ -410,23 +467,6 @@ function love.draw()
 	love.graphics.printf(count .. " PUCKS", 0, playHeight/2 - 40, winWidth/2, "center")
 	love.graphics.printf('debug', -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
     
-    --Menu circles
-    love.graphics.setColor(1,1,1, 0.3)
-    love.graphics.setLineWidth(1)
-    love.graphics.circle("line", menuCircle1.x, menuCircle1.y, playerSize)
-    love.graphics.circle("line", menuCircle2.x, menuCircle2.y, playerSize)
-    if menuCircle1.active then 
-        love.graphics.setLineWidth(15)
-        love.graphics.setColor(1, 0.25, 0.25)
-        love.graphics.arc("line", "open", menuCircle1.x, menuCircle1.y, playerSize +7.5, 0, math.pi * 0.2 * menuCircle1.completion)
-        love.graphics.setLineWidth(1)
-    end
-    if menuCircle2.active then 
-        love.graphics.setLineWidth(15)
-        love.graphics.setColor(0.25, 0.47, 1)
-        love.graphics.arc("line", "open", menuCircle2.x, menuCircle2.y, playerSize +7.5, 0, math.pi * 0.2 * menuCircle2.completion)
-        love.graphics.setLineWidth(1)
-    end
     
     --New puck animation
 	if newBall then
@@ -447,8 +487,7 @@ function love.draw()
     end
     
     --Explosions (goal)
-    for i = #explosions, 1, -1 do
-        local explosion = explosions[i]
+    for i, explosion in ipairs(explosions) do
         if explosion.left then
             love.graphics.setColor(1,0.25,0.25, (1 - (100 - explosion.prob)/110) *(ballSize * 5 -explosion.size)/(ballSize*5))
         else
@@ -458,10 +497,10 @@ function love.draw()
     end
 
     --Pucks
-	for i = #ballProbs, 1, -1  do
-		love.graphics.setColor(1,1,1,  1 - (100 - ballProbs[i].prob)/105)
-		if ballProbs[i].life < maxLife then love.graphics.setColor(0.5,0.14, 1, 0.02) end
-		love.graphics.circle("fill", ballProbs[i].x, ballProbs[i].y, ballSize)
+	for i, puck in ipairs(ballProbs)  do
+		love.graphics.setColor(1,1,1,  1 - (100 - puck.prob)/105)
+		if puck.life < maxLife then love.graphics.setColor(0.5,0.14, 1, 0.02) end
+		love.graphics.circle("fill", puck.x, puck.y, ballSize)
 	end
     
     if displayMenu then
@@ -472,5 +511,24 @@ function love.draw()
         local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
         love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], -200, -200, 0, 2)
     end
+    
+    --Menu circles
+    for i, option in ipairs(currentMenu) do
+        love.graphics.setColor(1,1,1, 0.3)
+        love.graphics.setLineWidth(1)
+        love.graphics.circle("line", option.x, option.y, playerSize)
+        love.graphics.setLineWidth(14)
+        love.graphics.setColor(1,1,1)
+        if option.x < 0 then
+            love.graphics.printf(option.text, option.x + playerSize/3, option.y - playerSize, playerSize*2, "center", math.pi/2)
+            love.graphics.setColor(1, 0.25, 0.25)
+        else
+            love.graphics.printf(option.text, option.x -playerSize/3, option.y + playerSize, playerSize*2, "center", -math.pi/2)
+            love.graphics.setColor(0.25, 0.47, 1)
+        end
+        
+        love.graphics.arc("line", "open", option.x, option.y, playerSize +7, 0, math.pi * 0.2 * option.completion)
+    end
+    love.graphics.setLineWidth(1)
 	
 end
