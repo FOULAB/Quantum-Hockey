@@ -40,8 +40,8 @@ while 1 :
 		device.emit(uinput.ABS_X, lx)
 		device.emit(uinput.ABS_Y, ly)
 		if len(result) > 1:
-			rx = result[0].get("pos", "none")[0]
-			ry = result[0].get("pos", "none")[1]
+			rx = result[1].get("pos", "none")[0]
+			ry = result[1].get("pos", "none")[1]
 			device.emit(uinput.ABS_RX, rx)
 			device.emit(uinput.ABS_RY, ry)
 	time.sleep(0.01)
