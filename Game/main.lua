@@ -229,6 +229,18 @@ function love.update(dt)
         p1.y = -1 * joy1:getGamepadAxis("lefty") * 0.75 * winWidth/2 --0.75 is the ratio of the Wiimote resolution (768/1024)
         p2.x = joy1:getGamepadAxis("rightx") * winWidth/2
         p2.y = -1 * joy1:getGamepadAxis("righty") * 0.75 * winWidth/2
+        
+        
+        --Hopefully fixes the wiimote's glitch when it loses an IR point.
+        if math.abs(p1.x - p2.x) < 10 and math.abs(p1.y - p2.y) < 10 then
+            if math.abs(p1.prevX - p1.x) > 200 then --completely arbitrary number
+                p1.x = p1.prevX
+                p1.y = p1.prevY
+            else
+                p2.x = p2.prevX
+                p2.y = p2.prevY
+            end
+        end
 	else
         p1.x = love.mouse.getX() - winWidth/2
         p1.y = love.mouse.getY() - playHeight/2
