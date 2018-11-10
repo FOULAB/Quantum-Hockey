@@ -217,14 +217,6 @@ function love.update(dt)
         
 	end
     
-    
-
-    
-    --animation test
-    animation.currentTime = animation.currentTime + dt
-    if animation.currentTime >= animation.duration then
-        animation.currentTime = animation.currentTime - animation.duration
-    end
 
 	--Get player position and velocity
 	p1.prevX = p1.x
@@ -233,13 +225,13 @@ function love.update(dt)
 	p2.prevY = p2.y
 	
 	if joysticks then
-	p1.x = (joy1:getGamepadAxis("leftx")-0.5)*(winWidth/4 - playerSize) - winWidth/8 - playerSize/2
-	p1.y = (joy1:getGamepadAxis("lefty")-0.5)*(playHeight/2 - playerSize) + playHeight/4 - playerSize/2
-	p2.x = (joy1:getGamepadAxis("rightx")-0.5)*(winWidth/4 - playerSize) + 3*winWidth/8 - playerSize/2
-	p2.y = (joy1:getGamepadAxis("righty")-0.5)*(playHeight/2 -playerSize) + playHeight/4 - playerSize/2
+        p1.x = joy1:getGamepadAxis("leftx") * winWidth/2
+        p1.y = joy1:getGamepadAxis("lefty") * 0.75 * winWidth/2 --0.75 is the ratio of the Wiimote resolution (768/1024)
+        p2.x = joy1:getGamepadAxis("rightx") * winWidth/2
+        p2.y = joy1:getGamepadAxis("righty") * 0.75 * winWidth/2
 	else
-	p1.x = love.mouse.getX() - winWidth/2
-	p1.y = love.mouse.getY() - playHeight/2
+        p1.x = love.mouse.getX() - winWidth/2
+        p1.y = love.mouse.getY() - playHeight/2
 	end
 	p1.vx = p1.x - p1.prevX
 	p1.vy = p1.y - p1.prevY
@@ -247,7 +239,11 @@ function love.update(dt)
 	p2.vy = p2.y - p2.prevY
     
     if displayMenu then
-        
+        --animation
+        animation.currentTime = animation.currentTime + dt
+        if animation.currentTime >= animation.duration then
+        animation.currentTime = animation.currentTime - animation.duration
+        end
     end
     
 
