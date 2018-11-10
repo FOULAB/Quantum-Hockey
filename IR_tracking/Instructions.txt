@@ -1,0 +1,3 @@
+Need to install Cwiid
+Need to install python-uinput (use pip)
+Need to do some stuff to give permissions to uinput for every user

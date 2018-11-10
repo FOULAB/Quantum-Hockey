@@ -163,7 +163,7 @@ function love.load()
     if joysticks and next(joysticks) == nil then joysticks = false end
     
     --animation
-    animation = newAnimation(love.graphics.newImage("qh_logo_sprite_transp2.png"), 200, 200, 1)
+    animation = newAnimation(love.graphics.newImage("qh_logo_sprite.png"), 200, 200, 1)
     
 end
 

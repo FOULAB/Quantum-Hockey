@@ -1,11 +1,6 @@
-$ sh love2d-build.sh update
-
-then
-
-$ sh love2d-build.sh build
-
-then
-
+ 
+$ curl -L http://d-alchemy.xyz/software/love/love2d-install.tgz >love2d-install.tgz
+$ tar xvzf love2d-install.tgz
 $ cd love2d-install
 $ sh install.sh
 $ cd ..
