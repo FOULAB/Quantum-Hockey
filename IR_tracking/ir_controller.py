@@ -3,7 +3,7 @@ import time
 import uinput
 from operator import itemgetter
 
-print("Please wiimote on now...")
+print("Please turn wiimote on now...")
 wm = cwiid.Wiimote()
 wm.led = 5
 wm.rpt_mode = cwiid.RPT_IR
@@ -31,7 +31,7 @@ for x in range(6):
 xmax = wm.state['ir_src'][0].get("pos", "none")[0]
 ymax = wm.state['ir_src'][0].get("pos", "none")[1]
 
-print("Done! X: " + xmin + '-' + xmax + ', Y: ' + ymin + '-' + ymax)
+print("Done! X: " + str(xmin) + '-' + str(xmax) + ', Y: ' + str(ymin) + '-' + str(ymax))
 
 events = (
 	uinput.BTN_SOUTH,
