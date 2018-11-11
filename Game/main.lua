@@ -6,6 +6,7 @@ local displayMenu = true
 local winWidth = 1280
 local winHeight = 720
 local playHeight = 524.5
+local screenFix = 40
 local goalSize = playHeight * 0.286
 local friction = 0.985
 
@@ -178,6 +179,7 @@ function love.load()
 	end
 
 	winWidth, winHeight = love.graphics.getDimensions()
+    winWidth = winWidth - screenFix --RPI + projector weird bugfix
 	playHeight = winWidth * 0.512 --ratio based on real dimensions
 	goalSize = playHeight * 0.286 /2
 	ballIntro = playHeight/4
@@ -208,7 +210,6 @@ function love.load()
     count = 0
     scoreFont = love.graphics.setNewFont('uni0553-webfont.ttf', 54)
     infoFont = love.graphics.setNewFont('uni0553-webfont.ttf', 18)
-    love.graphics.setLineWidth(2)
     
 
     --Check for Joysticks
@@ -445,14 +446,13 @@ end
 
 
 function love.draw()
-	love.graphics.translate(winWidth/2, winHeight/2)
+	love.graphics.translate((winWidth + screenFix)/2, winHeight/2)
+    love.graphics.setLineWidth(2)
 	
     --Background
     --if projector then
         love.graphics.setColor(1, 1, 1)
-        love.graphics.setLineWidth(5)
         love.graphics.rectangle("line", -winWidth/2 + 1, -playHeight/2 +1, winWidth -2, playHeight -2)
-    love.graphics.setLineWidth(1)
 --    else
 --        drawBG()
 --    end
