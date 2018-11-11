@@ -450,7 +450,9 @@ function love.draw()
     --Background
     --if projector then
         love.graphics.setColor(1, 1, 1)
-        love.graphics.rectangle("line", -winWidth/2, -playHeight/2, winWidth, playHeight)
+        love.graphics.setLineWidth(5)
+        love.graphics.rectangle("line", -winWidth/2 + 1, -playHeight/2 +1, winWidth -2, playHeight -2)
+    love.graphics.setLineWidth(1)
 --    else
 --        drawBG()
 --    end
