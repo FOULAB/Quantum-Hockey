@@ -281,9 +281,9 @@ function love.update(dt)
 	
 	if joysticks then
         p1.x = joy1:getGamepadAxis("leftx") * winWidth/2
-        p1.y = -joy1:getGamepadAxis("lefty") * 0.75 * winWidth/2 --0.75 is the ratio of the Wiimote resolution (768/1024)
+        p1.y = -joy1:getGamepadAxis("lefty") * playHeight/2 --0.75 * winWidth/2
         p2.x = joy1:getGamepadAxis("rightx") * winWidth/2
-        p2.y = -joy1:getGamepadAxis("righty") * 0.75 * winWidth/2
+        p2.y = -joy1:getGamepadAxis("righty") * playHeight/2
         
         
         --Hopefully fixes the wiimote's glitch when it loses an IR point.
