@@ -18,13 +18,13 @@ ymax = 767
 
 raw_input("Press Enter to start calibration")
 print("Place a single controller on the BOTTOM LEFT corner of the table.")
-for x in range(6)
+for x in range(6):
     print(5-x)
 xmin = wm.state['ir_src'][0].get("pos", "none")[0]
 ymin = wm.state['ir_src'][0].get("pos", "none")[1]
 
 print("Place the controller on the TOP RIGHT corner of the table.")
-for x in range(6)
+for x in range(6):
     print(5-x)
 xmax = wm.state['ir_src'][0].get("pos", "none")[0]
 ymax = wm.state['ir_src'][0].get("pos", "none")[1]
