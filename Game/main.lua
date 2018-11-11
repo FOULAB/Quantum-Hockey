@@ -1,4 +1,4 @@
-local windowed = true
+local windowed = false
 local paused = true
 --local projector = true
 local displayMenu = true
@@ -467,7 +467,7 @@ function love.draw()
     love.graphics.setFont(infoFont)
 	love.graphics.printf("TOTAL PROB: " .. totalProb .. "%", -winWidth/2, playHeight/2 - 40, winWidth/2, "center")
 	love.graphics.printf(count .. " PUCKS", 0, playHeight/2 - 40, winWidth/2, "center")
-	love.graphics.printf('debug', -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
+	love.graphics.printf(winWidth .. 'x' .. winHeight, -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
     
     
     --New puck animation
