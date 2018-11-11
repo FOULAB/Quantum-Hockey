@@ -6,7 +6,7 @@ local displayMenu = true
 local winWidth = 1280
 local winHeight = 720
 local playHeight = 524.5
-local screenFix = 40
+local screenFix = 100
 local goalSize = playHeight * 0.286
 local friction = 0.985
 
