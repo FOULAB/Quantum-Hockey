@@ -1,4 +1,4 @@
-local windowed = false
+local windowed = true
 local paused = true
 --local projector = true
 local displayMenu = true
