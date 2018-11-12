@@ -21,8 +21,8 @@ print("Place a single controller on the BOTTOM LEFT corner of the table.")
 for x in range(6):
     print(5-x)
     time.sleep(1)
-    
-noIR = True    
+
+noIR = True
 while noIR :
 	ir = wm.state['ir_src']
 	result = []
@@ -31,21 +31,21 @@ while noIR :
 		if x is not None:
 			result.append(x)
 
-    if result:
+	if result:
 		xmin = result[0].get("pos", "none")[0]
-		xmax = result[0].get("pos", "none")[1]
-        noIR = False
-    else:
-        print("Can't see the controller")
-        time.sleep(0.5)
+		ymin = result[0].get("pos", "none")[1]
+		noIR = False
+	else:
+		print("Can't see the controller")
+		time.sleep(0.5)
 
 
 print("Place the controller on the TOP RIGHT corner of the table.")
 for x in range(6):
     print(5-x)
     time.sleep(1)
-    
-noIR = True    
+
+noIR = True
 while noIR :
 	ir = wm.state['ir_src']
 	result = []
@@ -54,16 +54,15 @@ while noIR :
 		if x is not None:
 			result.append(x)
 
-    if result:
-		ymin = result[0].get("pos", "none")[0]
+	if result:
+		xmax = result[0].get("pos", "none")[0]
 		ymax = result[0].get("pos", "none")[1]
-        noIR = False
-    else:
-        print("Can't see the controller")
-        time.sleep(0.5)
+		noIR = False
+	else:
+		print("Can't see the controller")
+		time.sleep(0.5)
 
 print("Done! X: " + str(xmin) + '-' + str(xmax) + ', Y: ' + str(ymin) + '-' + str(ymax))
-
 
 
 events = (
