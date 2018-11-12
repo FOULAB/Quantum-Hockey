@@ -25,17 +25,6 @@ local roundWinner = -1
 local newBall = false
 local ballIntro = playHeight/4
 
-local joysticks = love.joystick.getJoysticks()
-local joy1 = joysticks[1]
-if joy1 and not joy1:isGamepad() then
-    local guid = joy1:getGUID()
-    love.joystick.setGamepadMapping(guid, 'leftx', 'axis', 1)
-    love.joystick.setGamepadMapping(guid, 'lefty', 'axis', 2)
-    love.joystick.setGamepadMapping(guid, 'rightx', 'axis', 3)
-    love.joystick.setGamepadMapping(guid, 'righty', 'axis', 4)
-end
-
-
 function variance()
 	return love.math.random(-10, 10) / 80
 end
@@ -97,6 +86,37 @@ local startMenu = {}
 startMenu[1] = menuItem:new{action = resume, text = 'START!'}
 startMenu[2] = menuItem:new{action = resume, text = 'START!'}
 
+
+
+
+--------------------- JOYSTICKS ------------------------
+local joysticks = love.joystick.getJoysticks()
+local joy1 = joysticks[1]
+if joy1 and not joy1:isGamepad() then
+    local guid = joy1:getGUID()
+    love.joystick.setGamepadMapping(guid, 'leftx', 'axis', 1)
+    love.joystick.setGamepadMapping(guid, 'lefty', 'axis', 2)
+    love.joystick.setGamepadMapping(guid, 'rightx', 'axis', 3)
+    love.joystick.setGamepadMapping(guid, 'righty', 'axis', 4)
+end
+
+--local calibration = false
+--local calibTimer = 0
+--local calibDelay = 5
+--local calibPoint = 1
+--local xmin
+--local xmax
+--local ymin
+--local ymax
+--local calibCircles = {}
+--calibCircles[1] = menuItem:new{text = '1'}
+--calibCircles[2] = menuItem:new{text = '2'}
+--function calibrate(dt)
+--    calibTimer = calibTimer + dt
+--    if calibTimer >= calibDelay then
+--        
+--    end
+--end
 
 
 
@@ -281,9 +301,9 @@ function love.update(dt)
 	
 	if joysticks then
         p1.x = joy1:getGamepadAxis("leftx") * winWidth/2
-        p1.y = -joy1:getGamepadAxis("lefty") * playHeight/2 --0.75 * winWidth/2
+        p1.y = -joy1:getGamepadAxis("lefty") * 0.75 * winWidth/2 -- 0.75 is the wiimote resolution ratio
         p2.x = joy1:getGamepadAxis("rightx") * winWidth/2
-        p2.y = -joy1:getGamepadAxis("righty") * playHeight/2
+        p2.y = -joy1:getGamepadAxis("righty") * 0.75 * winWidth/2
         
         
         --Hopefully fixes the wiimote's glitch when it loses an IR point.
