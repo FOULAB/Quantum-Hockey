@@ -31,7 +31,7 @@ while noIR :
 		if x is not None:
 			result.append(x)
 
- 	if result:
+    if result:
 		xmin = result[0].get("pos", "none")[0]
 		xmax = result[0].get("pos", "none")[1]
         noIR = False
@@ -54,7 +54,7 @@ while noIR :
 		if x is not None:
 			result.append(x)
 
- 	if result:
+    if result:
 		ymin = result[0].get("pos", "none")[0]
 		ymax = result[0].get("pos", "none")[1]
         noIR = False
