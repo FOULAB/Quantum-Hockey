@@ -361,9 +361,9 @@ function love.update(dt)
 	
 	if joysticks then
         p1.x = (((joy1:getGamepadAxis("leftx") -xRawLow) * xRefRange)/(xRawHigh - xRawLow)) + xRefLow
-        p1.y = -((((joy1:getGamepadAxis("lefty") -yRawLow) * yRefRange)/(yRawHigh - yRawLow)) + yRefLow)
+        p1.y = (((joy1:getGamepadAxis("lefty") -yRawLow) * yRefRange)/(yRawHigh - yRawLow)) + yRefLow
         p2.x = (((joy1:getGamepadAxis("rightx") -xRawLow) * xRefRange)/(xRawHigh - xRawLow)) + xRefLow
-        p2.y = -((((joy1:getGamepadAxis("righty") -yRawLow) * yRefRange)/(yRawHigh - yRawLow)) + yRefLow)
+        p2.y = (((joy1:getGamepadAxis("righty") -yRawLow) * yRefRange)/(yRawHigh - yRawLow)) + yRefLow
         
         
         --Hopefully fixes the wiimote's glitch when it loses an IR point.
