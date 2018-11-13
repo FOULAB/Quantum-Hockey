@@ -40,4 +40,3 @@ while 1 :
 			ry = result[1].get("pos", "none")[1]
 			device.emit(uinput.ABS_RX, rx)
 			device.emit(uinput.ABS_RY, ry)
-	time.sleep(0.01)
