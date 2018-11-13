@@ -100,23 +100,68 @@ if joy1 and not joy1:isGamepad() then
     love.joystick.setGamepadMapping(guid, 'righty', 'axis', 4)
 end
 
---local calibration = false
---local calibTimer = 0
---local calibDelay = 5
---local calibPoint = 1
---local xmin
---local xmax
---local ymin
---local ymax
---local calibCircles = {}
---calibCircles[1] = menuItem:new{text = '1'}
---calibCircles[2] = menuItem:new{text = '2'}
---function calibrate(dt)
---    calibTimer = calibTimer + dt
---    if calibTimer >= calibDelay then
---        
---    end
---end
+local calibration = false
+local calibrated = false
+local calibTimer = 0
+local calibDelay = 5
+local calibCount = 1
+
+local xRawLow = -1
+local xRawHigh = 1
+local yRawLow = -1
+local yRawHigh = 1
+
+local xRefLow = -winWidth/2
+local xRefRange = winWidth
+local yRefLow = -playHeight/2
+local yRefRange = playHeight
+
+local calibCircles = {}
+calibCircles[1] = menuItem:new{text = '1'}
+calibCircles[2] = menuItem:new{text = '2'}
+
+function calibrate(dt)
+    if calibCount <= #calibCircles then
+        local point = calibCircles[calibCount]
+        point.active = true
+        point.text = 'PLACE HERE'
+        calibTimer = calibTimer + dt
+        point.completion = calibTimer * 2
+        if calibTimer >= calibDelay then
+            if joysticks then
+                if point.x < 0 then
+                    xRawLow = joy1:getGamepadAxis("leftx")
+                    yRawLow = joy1:getGamepadAxis("lefty")
+                else
+                    xRawHigh = joy1:getGamepadAxis("leftx")
+                    yRawHigh = joy1:getGamepadAxis("lefty")
+                end
+                point.active = false
+                point.text = ''
+                calibTimer = 0
+                calibCount = calibCount + 1
+            end
+        end
+    else
+        calibration = false
+        calibrated = true
+        calibTimer = 0
+        calibCount = 1
+        if not xRawHigh == 1 then
+            xRefLow = calibCircles[1].x
+            yRefLow = calibCircles[1].y
+            xRefRange = calibCircles[2].x - calibCircles[1].x
+            yRefRange = calibCircles[2].y - calibCircles[1].y
+        end
+    end
+end
+
+function startCalibration()
+    if displayMenu then
+        toggleMenu()
+    end
+    calibration = true
+end
 
 
 
@@ -221,6 +266,18 @@ function love.load()
     menu[4].y = -menu[1].y
     startMenu[1].x = menu[1].x
     startMenu[2].x = -startMenu[1].x
+    
+    --Calibration
+    calibCircles[1].x = -winWidth/2.5
+    calibCircles[1].y = -playHeight/3
+    calibCircles[2].x = winWidth/2.5
+    calibCircles[2].y = playHeight/3
+    if not calibrated then
+        xRefLow = -winWidth/2
+        xRefRange = winWidth
+        yRefLow = -playHeight/2
+        yRefRange = playHeight
+    end
 
     ballProbs = {}
     scoreLeft = 0
@@ -290,6 +347,9 @@ function love.update(dt)
             toggleMenu()
         end
         
+        if key == 'c' then
+            startCalibration()
+        end
 	end
     
 
@@ -300,10 +360,10 @@ function love.update(dt)
 	p2.prevY = p2.y
 	
 	if joysticks then
-        p1.x = joy1:getGamepadAxis("leftx") * winWidth/2
-        p1.y = -joy1:getGamepadAxis("lefty") * playHeight/2 --0.75 * winWidth/2
-        p2.x = joy1:getGamepadAxis("rightx") * winWidth/2
-        p2.y = -joy1:getGamepadAxis("righty") * playHeight/2
+        p1.x = (((joy1:getGamepadAxis("leftx") -xRawLow) * xRefRange)/(xRawHigh - xRawLow)) + xRefLow
+        p1.y = -((((joy1:getGamepadAxis("lefty") -yRawLow) * yRefRange)/(yRawHigh - yRawLow)) + yRefLow)
+        p2.x = (((joy1:getGamepadAxis("rightx") -xRawLow) * xRefRange)/(xRawHigh - xRawLow)) + xRefLow
+        p2.y = -((((joy1:getGamepadAxis("righty") -yRawLow) * yRefRange)/(yRawHigh - yRawLow)) + yRefLow)
         
         
         --Hopefully fixes the wiimote's glitch when it loses an IR point.
@@ -325,7 +385,11 @@ function love.update(dt)
 	p2.vx = p2.x - p2.prevX
 	p2.vy = p2.y - p2.prevY
     
-    if displayMenu then
+    if calibration then
+        currentMenu = calibCircles
+        calibrate(dt)
+        return
+    elseif displayMenu then
         --animation
         animation.currentTime = animation.currentTime + dt
         if animation.currentTime >= animation.duration then
@@ -487,7 +551,7 @@ function love.draw()
     love.graphics.setFont(infoFont)
 	love.graphics.printf("TOTAL PROB: " .. totalProb .. "%", -winWidth/2, playHeight/2 - 40, winWidth/2, "center")
 	love.graphics.printf(count .. " PUCKS", 0, playHeight/2 - 40, winWidth/2, "center")
-	love.graphics.printf(winWidth .. 'x' .. winHeight, -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
+	--love.graphics.printf('debug', -winWidth/4, playHeight/2 - 40, winWidth/2, "center")
     
     
     --New puck animation
