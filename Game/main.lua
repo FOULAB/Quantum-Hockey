@@ -110,6 +110,8 @@ local xRawLow = -1
 local xRawHigh = 1
 local yRawLow = -1
 local yRawHigh = 1
+local xRawRange
+local yRawRange
 
 local xRefLow = -winWidth/2
 local xRefRange = winWidth
@@ -151,6 +153,8 @@ function calibrate(dt)
         yRefLow = calibCircles[1].y
         xRefRange = calibCircles[2].x - calibCircles[1].x
         yRefRange = calibCircles[2].y - calibCircles[1].y
+        xRawRange = xRawHigh - xRawLow
+        yRawRange = yRawHigh - yRawLow
     end
 end
 
@@ -358,10 +362,10 @@ function love.update(dt)
 	p2.prevY = p2.y
 	
 	if joysticks then
-        p1.x = (((joy1:getGamepadAxis("leftx") -xRawLow) * xRefRange)/(xRawHigh - xRawLow)) + xRefLow
-        p1.y = (((joy1:getGamepadAxis("lefty") -yRawLow) * yRefRange)/(yRawHigh - yRawLow)) + yRefLow
-        p2.x = (((joy1:getGamepadAxis("rightx") -xRawLow) * xRefRange)/(xRawHigh - xRawLow)) + xRefLow
-        p2.y = (((joy1:getGamepadAxis("righty") -yRawLow) * yRefRange)/(yRawHigh - yRawLow)) + yRefLow
+        p1.x = (((joy1:getGamepadAxis("leftx") -xRawLow) * xRefRange)/xRawRange) + xRefLow
+        p1.y = (((joy1:getGamepadAxis("lefty") -yRawLow) * yRefRange)/yRawRange) + yRefLow
+        p2.x = (((joy1:getGamepadAxis("rightx") -xRawLow) * xRefRange)/xRawRange) + xRefLow
+        p2.y = (((joy1:getGamepadAxis("righty") -yRawLow) * yRefRange)/yRawRange) + yRefLow
         
         
         --Hopefully fixes the wiimote's glitch when it loses an IR point.
