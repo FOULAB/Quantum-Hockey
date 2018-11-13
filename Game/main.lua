@@ -147,12 +147,10 @@ function calibrate(dt)
         calibrated = true
         calibTimer = 0
         calibCount = 1
-        if not xRawHigh == 1 then
-            xRefLow = calibCircles[1].x
-            yRefLow = calibCircles[1].y
-            xRefRange = calibCircles[2].x - calibCircles[1].x
-            yRefRange = calibCircles[2].y - calibCircles[1].y
-        end
+        xRefLow = calibCircles[1].x
+        yRefLow = calibCircles[1].y
+        xRefRange = calibCircles[2].x - calibCircles[1].x
+        yRefRange = calibCircles[2].y - calibCircles[1].y
     end
 end
 
