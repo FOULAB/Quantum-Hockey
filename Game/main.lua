@@ -110,8 +110,8 @@ local xRawLow = -1
 local xRawHigh = 1
 local yRawLow = -1
 local yRawHigh = 1
-local xRawRange
-local yRawRange
+local xRawRange = xRawHigh - xRawLow
+local yRawRange = yRawHigh - yRawLow
 
 local xRefLow = -winWidth/2
 local xRefRange = winWidth
