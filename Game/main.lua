@@ -8,9 +8,9 @@ local winHeight = 720
 local playHeight = 524.5
 local screenFix = 50
 local goalSize = playHeight * 0.286
-local friction = 0.985
+local friction = 1.1
 
-local speed = 10
+local speed = 600
 local maxLife = 4 --(seconds after immobility)
 local ballObject = {x = 0, y = 0, vx = speed, vy = speed, mass=1, prob = 100, life = maxLife}
 local ballProbs = {}
@@ -26,7 +26,7 @@ local newBall = false
 local ballIntro = playHeight/4
 
 function variance()
-	return love.math.random(-10, 10) / 80
+	return love.math.random(-10, 10)
 end
 
 local scoreLeft = 0
@@ -34,8 +34,8 @@ local scoreRight = 0
 local prevScoreLeft = 0
 local prevScoreRight = 0
 local totalProb = 100
-local p1={x =0, y=0, prevX=0, prevY=0, vx=0, vy=0, mass = 1.1}
-local p2={x =0, y=0, prevX=0, prevY=0, vx=0, vy=0, mass = 1.1}
+local p1={x =0, y=0, prevX=0, prevY=0, vx=0, vy=0, mass = 1.1, avg = {}}
+local p2={x =0, y=0, prevX=0, prevY=0, vx=0, vy=0, mass = 1.1, avg = {}}
 
 function round(n, mult)
     mult = mult or 1
@@ -239,7 +239,7 @@ end
 ------------------ LOVE LOAD -------------------
 -------------------------------------------------
 function love.load()
-    love.window.setMode(winWidth, winWidth * 0.512, {resizable=false, vsync=true, msaa=4})
+    love.window.setMode(winWidth, winWidth * 0.512, {resizable=false, vsync=false, msaa=4})
     if not windowed then
     	local fullscreen = love.window.setFullscreen(true)
     	love.mouse.setVisible(false)
@@ -299,7 +299,7 @@ function love.load()
     
 end
 
-function addPuck()
+function addPuck(dt)
     if scoreLeft - prevScoreLeft > scoreRight - prevScoreRight then
         roundWinner = 1 --left won the round
     else if count > 0 then --fix for first puck
@@ -308,7 +308,7 @@ function addPuck()
     end
     
     newBall = true
-    ballIntro = ballIntro - (playHeight/1.5)/ ballIntro
+    ballIntro = ballIntro - (playHeight/ ballIntro) *30 *dt
 
     if ballIntro <= ballSize then
         count = count + 1
@@ -321,7 +321,25 @@ function addPuck()
     end
 end
 
-
+-- records set number of player positions and time recorded
+function recordPos(player, dt, nRecords)
+    table.insert(player.avg, {x = player.x, y = player.y, dt = dt})
+    for i = 1,#player.avg - nRecords do
+      table.remove(player.avg, 1)
+    end
+end
+    
+function averageSpeed(player)
+    local last = #player.avg
+    local deltaX = player.avg[last].x - player.avg[1].x
+    local deltaY = player.avg[last].y - player.avg[1].y
+    local deltaT = 0
+    for i = 1,#player.avg do
+      deltaT = deltaT + player.avg[i].dt
+    end
+    player.vx = deltaX/deltaT
+    player.vy = deltaY/deltaT
+end
 
 
 function love.update(dt)
@@ -382,10 +400,16 @@ function love.update(dt)
         p1.x = love.mouse.getX() - winWidth/2
         p1.y = love.mouse.getY() - playHeight/2
 	end
-	p1.vx = p1.x - p1.prevX
-	p1.vy = p1.y - p1.prevY
-	p2.vx = p2.x - p2.prevX
-	p2.vy = p2.y - p2.prevY
+    
+        recordPos(p1, dt, 4)
+        recordPos(p2, dt, 4)
+        averageSpeed(p1)
+        averageSpeed(p2)
+--	p1.vx = (p1.x - p1.prevX)/dt
+--	p1.vy = (p1.y - p1.prevY)/dt
+--	p2.vx = p2.x - p2.prevX
+--	p2.vy = p2.y - p2.prevY
+    
     
     if calibration then
         currentMenu = calibCircles
@@ -407,7 +431,7 @@ function love.update(dt)
         currentMenu = menuCircles
     end
     for i, option in ipairs(currentMenu) do
-        if checkCollision(option, p1) then
+        if checkCollision(option, p1) or checkCollision(option, p2) then
             option.active = true
             option.completion = option.completion + dt*5
             if option.completion >= 10 then
@@ -431,7 +455,7 @@ function love.update(dt)
 
 	if totalProb < 40 then
 
-		addPuck();
+		addPuck(dt);
 		
 	end
     
@@ -440,12 +464,12 @@ function love.update(dt)
 	for i, ball in ipairs(ballProbs) do
 
 		--Move balls before calculating next event
-		ball.x = ball.x + ball.vx
-		ball.y = ball.y + ball.vy
+		ball.x = ball.x + ball.vx * dt
+		ball.y = ball.y + ball.vy * dt
 
 		--Deceleration (friction)
-		ball.vx = ball.vx - ball.vx * friction * dt
-		ball.vy = ball.vy - ball.vy * friction * dt
+		ball.vx = ball.vx * (1 - math.min(dt*friction, 1))
+		ball.vy = ball.vy * (1 - math.min(dt*friction, 1))
 
 		--Degradation
 		if ball.prob < lowestProb and math.abs(ball.vx) <= 0.05 and math.abs(ball.vy) <= 0.05 then
