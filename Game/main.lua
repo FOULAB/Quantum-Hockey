@@ -11,7 +11,7 @@ local goalSize = playHeight * 0.286
 local friction = 1.1
 
 local speed = 600
-local maxLife = 4 --(seconds after immobility)
+local maxLife = 0.5 --(seconds after immobility)
 local ballObject = {x = 0, y = 0, vx = speed, vy = speed, mass=1, prob = 100, life = maxLife}
 local ballProbs = {}
 local explosions = {}
@@ -21,6 +21,7 @@ local playerSize = 34
 local loop = true
 local lowestProb = 2
 local roundWinner = -1
+local newPuckThreshold = 60
 
 local newBall = false
 local ballIntro = playHeight/4
@@ -453,7 +454,7 @@ function love.update(dt)
 		totalProb = totalProb + ballProbs[i].prob
 	end
 
-	if totalProb < 40 then
+	if totalProb < newPuckThreshold then
 
 		addPuck(dt);
 		
@@ -472,8 +473,8 @@ function love.update(dt)
 		ball.vy = ball.vy * (1 - math.min(dt*friction, 1))
 
 		--Degradation
-		if ball.prob < lowestProb and math.abs(ball.vx) <= 0.05 and math.abs(ball.vy) <= 0.05 then
-			ball.life = ball.life -1 * dt
+		if ball.prob < lowestProb and math.abs(ball.vx) <= 1 and math.abs(ball.vy) <= 1 then
+			ball.life = ball.life - dt
 			if ball.life <= 0 then
 				removeBall(i)
 			end
@@ -610,8 +611,7 @@ function love.draw()
 
     --Pucks
 	for i, puck in ipairs(ballProbs)  do
-		love.graphics.setColor(1,1,1,  1 - (100 - puck.prob)/105)
-		if puck.life < maxLife then love.graphics.setColor(0.5,0.14, 1, 0.02) end
+		love.graphics.setColor(1,1,1,  1 - (100 - puck.prob)/110)
 		love.graphics.circle("fill", puck.x, puck.y, ballSize)
 	end
     
